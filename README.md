@@ -58,18 +58,6 @@ Then visit: [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## ⚙️ Configuration  
-
-Flip Track supports environment variables for customization:  
-
-| Variable       | Description | Example |
-|----------------|-------------|---------|
-| `FFT_DB`       | Path to database file | `./instance/inventory.db` |
-| `FFT_UPLOADS`  | Folder for uploaded images | `./uploads` |
-| `FFT_CURRENCY` | Display currency | `CAD` |
-
----
-
 ## 📸 Screenshots  
 
 _Add screenshots here (Dashboard, Item Detail, Gallery, Dark Mode, Auction Watchlist)._  
