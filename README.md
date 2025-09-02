@@ -84,3 +84,11 @@ Contributions are welcome!
 - Open-source and fully customizable  
 
 If you find this project useful, don’t forget to **star ⭐ the repo**!
+
+---
+
+## ☕ Support the Project  
+
+If you find **Flip Track** helpful and want to support future development, you can **buy me a coffee** ❤️  
+
+👉 [Donate via PayPal](https://www.paypal.me/CoastalCity)  
