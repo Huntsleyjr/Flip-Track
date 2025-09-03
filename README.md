@@ -61,7 +61,7 @@ Then visit: [http://localhost:5000](http://localhost:5000)
 ## 📸 Screenshots  
 
 ![Dashboard](screenshots/Dashboard-Light.png)
-![Dashboard](screenshots/Dashboard-Dark.png)
+![Dashboard_Dark](screenshots/Dashboard-Dark.png)
 ![item-view](screenshots/Item-view.png)
 ![item-create](screenshots/Item-create.png)
 
