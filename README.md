@@ -2,8 +2,8 @@
 
 ![Logo](FlipTrack/public/banner.png)
 
-![Python Version](https://img.shields.io/badge/python-3.x-blue)  
-![Flask](https://img.shields.io/badge/flask-web--framework-lightgrey)  
+[Discord Support](https://discord.gg/5cC68aTMQS)
+
 
 Flip Track is a modern, responsive web app designed to help ** flippers, resellers, and hobbyists** track their inventory, costs, profits, and ROI with ease. Whether you’re running a side hustle or managing a large inventory, Flip Track keeps everything organized in one clean dashboard.  
 
