@@ -1,0 +1,556 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <a href="{{ url_for('dashboard') }}" 
+                       class="text-gray-400 hover:text-gray-500">
+                        <i data-feather="arrow-left" class="h-5 w-5"></i>
+                    </a>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ item.name }}</h1>
+                    {% if item.is_sold %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        <i data-feather="check-circle" class="h-3 w-3 mr-1"></i>
+                        Sold
+                    </span>
+                    {% endif %}
+                </div>
+                <a href="{{ url_for('items.item_edit', item_id=item.id) }}" 
+                   class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i data-feather="edit-2" class="h-4 w-4 mr-2"></i>
+                    Edit Item
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Images Gallery -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="camera" class="inline h-5 w-5 mr-2"></i>
+                    Photos
+                </h3>
+                
+                {% if item.images %}
+                <div class="image-gallery">
+                    <!-- Main Image Display -->
+                    <div class="mb-4">
+                        <img id="main-image" 
+                             src="{{ url_for('uploaded_file', filename=item.images[0].filename) }}" 
+                             alt="{{ item.name }}"
+                             class="w-full h-64 object-cover rounded-lg cursor-pointer"
+                             onclick="openImageViewer('{{ url_for('uploaded_file', filename=item.images[0].filename) }}')">
+                    </div>
+                    
+                    <!-- Thumbnail Strip -->
+                    {% if item.images|length > 1 %}
+                    <div class="grid grid-cols-4 gap-2">
+                        {% for image in item.images %}
+                        <img src="{{ url_for('uploaded_file', filename=image.filename) }}" 
+                             alt="{{ item.name }}"
+                             class="h-16 w-full object-cover rounded cursor-pointer border-2 {% if loop.index == 1 %}border-indigo-500{% else %}border-transparent hover:border-gray-300{% endif %}"
+                             onclick="setMainImage('{{ url_for('uploaded_file', filename=image.filename) }}', this)">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i data-feather="camera" class="mx-auto h-12 w-12 text-gray-400"></i>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No photos uploaded</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Item Details -->
+        <div class="space-y-6">
+            <!-- Basic Information -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                        <i data-feather="info" class="inline h-5 w-5 mr-2"></i>
+                        Item Information
+                    </h3>
+                    
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Purchase Date</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ item.purchase_date.strftime('%B %d, %Y') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Purchase Price</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(item.purchase_price)) }}</dd>
+                        </div>
+                        {% if item.expected_sale_price and not item.is_sold %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Expected Sale Price</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(item.expected_sale_price)) }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if item.is_sold %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Sale Date</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ item.sale_date.strftime('%B %d, %Y') }}</dd>
+                        </div>
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Sale Price</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(item.sale_price)) }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if item.notes %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">{{ item.notes }}</dd>
+                        </div>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Financial Summary -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                        <i data-feather="dollar-sign" class="inline h-5 w-5 mr-2"></i>
+                        Financial Summary
+                    </h3>
+                    
+                    <dl class="space-y-3">
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Costs</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(item.total_costs)) }}</dd>
+                        </div>
+                        {% if item.is_sold %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Profit/Loss</dt>
+                            <dd class="text-sm {% if item.profit > 0 %}text-green-600 dark:text-green-400{% elif item.profit < 0 %}text-red-600 dark:text-red-400{% else %}text-gray-900 dark:text-white{% endif %}">
+                                ${{ "%.2f"|format(cents_to_dollars(item.profit)) }}
+                            </dd>
+                        </div>
+                        {% if item.roi %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">ROI</dt>
+                            <dd class="text-sm {% if item.roi > 0 %}text-green-600 dark:text-green-400{% elif item.roi < 0 %}text-red-600 dark:text-red-400{% else %}text-gray-900 dark:text-white{% endif %}">
+                                {{ "%.1f"|format(item.roi) }}%
+                            </dd>
+                        </div>
+                        {% endif %}
+                        {% elif item.expected_sale_price %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Potential Profit</dt>
+                            <dd class="text-sm {% if item.potential_profit > 0 %}text-green-600 dark:text-green-400{% elif item.potential_profit < 0 %}text-red-600 dark:text-red-400{% else %}text-gray-900 dark:text-white{% endif %}">
+                                ${{ "%.2f"|format(cents_to_dollars(item.potential_profit)) }}
+                            </dd>
+                        </div>
+                        {% if item.potential_roi %}
+                        <div>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Potential ROI</dt>
+                            <dd class="text-sm {% if item.potential_roi > 0 %}text-green-600 dark:text-green-400{% elif item.potential_roi < 0 %}text-red-600 dark:text-red-400{% else %}text-gray-900 dark:text-white{% endif %}">
+                                {{ "%.1f"|format(item.potential_roi) }}%
+                            </dd>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Repairs Section -->
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                    <i data-feather="tool" class="inline h-5 w-5 mr-2"></i>
+                    Repairs & Maintenance
+                </h3>
+                <button onclick="toggleAddRepairForm()" 
+                        class="text-indigo-600 hover:text-indigo-500 text-sm font-medium">
+                    <i data-feather="plus" class="inline h-4 w-4 mr-1"></i>
+                    Add Repair
+                </button>
+            </div>
+
+            <!-- Add Repair Form (Hidden by default) -->
+            <div id="add-repair-form" class="hidden mb-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <form method="POST" action="{{ url_for('items.add_repair', item_id=item.id) }}" enctype="multipart/form-data">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="sm:col-span-2">
+                            <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Repair Notes *</label>
+                            <textarea name="notes" required rows="3"
+                                      class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                      placeholder="Describe the repair work needed..."></textarea>
+                        </div>
+                        <div>
+                            <label for="expected_cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expected Cost</label>
+                            <input type="number" name="expected_cost" step="0.01" min="0"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                        <div>
+                            <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                            <select name="status"
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Supplies Used</label>
+                            <div id="supply-usage-fields" class="mt-1 space-y-2">
+                                <div class="flex space-x-2 supply-field">
+                                    <select name="supply_id[]" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white sm:text-sm">
+                                        <option value="">Select Supply</option>
+                                        {% for supply in supplies %}
+                                        <option value="{{ supply.id }}">{{ supply.name }} ({{ '%.2f'|format(supply.quantity) }} {{ supply.unit }})</option>
+                                        {% endfor %}
+                                    </select>
+                                    <input type="number" step="0.01" min="0" name="quantity_used[]" placeholder="Qty"
+                                           class="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white sm:text-sm">
+                                </div>
+                            </div>
+                            <button type="button" class="mt-2 text-indigo-600 hover:text-indigo-500 text-sm" onclick="addSupplyField()">Add Supply</button>
+                        </div>
+
+
+
+                        <div class="sm:col-span-2">
+                            <label for="repair_images" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Repair Photos</label>
+                            <input id="repair_images" type="file" name="repair_images[]" multiple accept="image/*"
+                                   class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-3">
+                        <button type="button" onclick="toggleAddRepairForm()"
+                                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Add Repair
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Repairs List -->
+            {% if item.repairs %}
+            <div class="space-y-4">
+                {% for repair in item.repairs %}
+                <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                    <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium
+                                           {% if repair.status == 'completed' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                           {% elif repair.status == 'in_progress' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                           {% else %}bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200{% endif %}">
+                                    {{ repair.status.replace('_', ' ').title() }}
+                                </span>
+                                {% if repair.final_cost is not none %}
+                                <span class="text-sm text-gray-600 dark:text-gray-400">
+                                    Final: ${{ "%.2f"|format(cents_to_dollars(repair.total_cost)) }}
+                                </span>
+                                {% elif repair.expected_cost or repair.supplies %}
+                                <span class="text-sm text-gray-600 dark:text-gray-400">
+                                    Expected: ${{ "%.2f"|format(cents_to_dollars(repair.total_cost)) }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            <p class="text-sm text-gray-900 dark:text-white">{{ repair.notes }}</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Added {{ repair.created_at.strftime('%b %d, %Y') }}
+                            </p>
+
+                            {% if repair.supplies %}
+                            <ul class="mt-2 text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                                {% for usage in repair.supplies %}
+                                <li>{{ usage.quantity_used }} {{ usage.supply.unit }} {{ usage.supply.name }} - ${{ "%.2f"|format(cents_to_dollars(usage.cost_cents)) }}</li>
+                                {% endfor %}
+                            </ul>
+                            {% endif %}
+
+                            <!-- Repair Images -->
+                            {% if repair.images %}
+                            <div class="mt-2 flex space-x-2">
+                                {% for image in repair.images %}
+                                <img src="{{ url_for('uploaded_file', filename=image.filename) }}"
+                                     alt="Repair photo"
+                                     class="h-16 w-16 object-cover rounded cursor-pointer border border-gray-300"
+                                     onclick="openImageViewer('{{ url_for('uploaded_file', filename=image.filename) }}')">
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="ml-4 flex space-x-2">
+                            <button type="button" onclick="toggleEditRepairForm({{ repair.id }})"
+                                    class="text-indigo-600 hover:text-indigo-500">
+                                <i data-feather="edit-2" class="h-4 w-4"></i>
+                            </button>
+                            <form method="POST" action="{{ url_for('items.delete_repair', repair_id=repair.id) }}">
+                                <button type="submit" data-confirm="Delete this repair?"
+                                        class="text-red-600 hover:text-red-500">
+                                    <i data-feather="trash-2" class="h-4 w-4"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <div id="edit-repair-form-{{ repair.id }}" class="hidden mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+                        <form method="POST" action="{{ url_for('items.edit_repair', repair_id=repair.id) }}" enctype="multipart/form-data">
+                            <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Repair Notes *</label>
+                                    <textarea name="notes" required rows="3"
+                                              class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">{{ repair.notes }}</textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expected Cost</label>
+                                    <input type="number" name="expected_cost" step="0.01" min="0"
+                                           value="{{ '%.2f'|format(cents_to_dollars(repair.expected_cost)) if repair.expected_cost is not none }}"
+                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Final Cost</label>
+                                    <input type="number" name="final_cost" step="0.01" min="0"
+                                           value="{{ '%.2f'|format(cents_to_dollars(repair.final_cost)) if repair.final_cost is not none }}"
+                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                                    <select name="status"
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                        <option value="pending" {% if repair.status == 'pending' %}selected{% endif %}>Pending</option>
+                                        <option value="in_progress" {% if repair.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                                        <option value="completed" {% if repair.status == 'completed' %}selected{% endif %}>Completed</option>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Add Supplies</label>
+                                    <div id="supply-usage-fields-{{ repair.id }}" class="mt-1 space-y-2">
+                                        <div class="flex space-x-2 supply-field">
+                                            <select name="supply_id[]" class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white sm:text-sm">
+                                                <option value="">Select Supply</option>
+                                                {% for supply in supplies %}
+                                                <option value="{{ supply.id }}">{{ supply.name }} ({{ '%.2f'|format(supply.quantity) }} {{ supply.unit }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <input type="number" step="0.01" min="0" name="quantity_used[]" placeholder="Qty" class="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm dark:bg-gray-700 dark:text-white sm:text-sm">
+                                        </div>
+                                    </div>
+                                    <button type="button" class="mt-2 text-indigo-600 hover:text-indigo-500 text-sm" onclick="addSupplyField('supply-usage-fields-{{ repair.id }}')">Add Supply</button>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label for="repair_images-{{ repair.id }}" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Add Photos</label>
+                                    <input id="repair_images-{{ repair.id }}" type="file" name="repair_images[]" multiple accept="image/*
+                                           class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-end space-x-3">
+                                <button type="button" onclick="toggleEditRepairForm({{ repair.id }})"
+                                        class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Cancel
+                                </button>
+                                <button type="submit"
+                                        class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                    Save
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 dark:text-gray-400">No repairs recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Other Costs Section -->
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                    <i data-feather="credit-card" class="inline h-5 w-5 mr-2"></i>
+                    Additional Costs
+                </h3>
+                <button onclick="toggleAddCostForm()" 
+                        class="text-indigo-600 hover:text-indigo-500 text-sm font-medium">
+                    <i data-feather="plus" class="inline h-4 w-4 mr-1"></i>
+                    Add Cost
+                </button>
+            </div>
+
+            <!-- Add Cost Form (Hidden by default) -->
+            <div id="add-cost-form" class="hidden mb-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                <form method="POST" action="{{ url_for('items.add_other_cost', item_id=item.id) }}">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div>
+                            <label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
+                            <input type="text" name="description" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                   placeholder="Shipping, insurance, etc.">
+                        </div>
+                        <div>
+                            <label for="amount" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount *</label>
+                            <input type="number" name="amount" step="0.01" min="0" required
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                        <div>
+                            <label for="date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                            <input type="date" name="date" value="{{ date.today().isoformat() }}"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-3">
+                        <button type="button" onclick="toggleAddCostForm()"
+                                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Add Cost
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Costs List -->
+            {% if item.other_costs %}
+            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
+                        {% for cost in item.other_costs %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ cost.description }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(cost.amount)) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ cost.date.strftime('%b %d, %Y') }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm flex space-x-2">
+                                <button type="button" onclick="toggleEditCostForm({{ cost.id }})" class="text-indigo-600 hover:text-indigo-500">
+                                    <i data-feather="edit-2" class="h-4 w-4"></i>
+                                </button>
+                                <form method="POST" action="{{ url_for('items.delete_other_cost', cost_id=cost.id) }}" class="inline">
+                                    <button type="submit" data-confirm="Delete this cost?"
+                                            class="text-red-600 hover:text-red-500">
+                                        <i data-feather="trash-2" class="h-4 w-4"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        <tr id="edit-cost-form-{{ cost.id }}" class="hidden">
+                            <td colspan="4" class="px-6 py-4 bg-gray-50 dark:bg-gray-700">
+                                <form method="POST" action="{{ url_for('items.edit_other_cost', cost_id=cost.id) }}">
+                                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Description *</label>
+                                            <input type="text" name="description" required value="{{ cost.description }}"
+                                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Amount *</label>
+                                            <input type="number" name="amount" step="0.01" min="0" required value="{{ '%.2f'|format(cents_to_dollars(cost.amount)) }}"
+                                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
+                                            <input type="date" name="date" value="{{ cost.date.isoformat() }}"
+                                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                                        </div>
+                                    </div>
+                                    <div class="mt-4 flex justify-end space-x-3">
+                                        <button type="button" onclick="toggleEditCostForm({{ cost.id }})"
+                                                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                            Save
+                                        </button>
+                                    </div>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 dark:text-gray-400">No additional costs recorded yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Image Viewer Modal -->
+<div id="image-viewer" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50" onclick="closeImageViewer()">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative max-w-4xl max-h-full">
+            <img id="viewer-image" src="" alt="" class="max-w-full max-h-full object-contain">
+            <button onclick="closeImageViewer()" 
+                    class="absolute top-4 right-4 text-white hover:text-gray-300">
+                <i data-feather="x" class="h-8 w-8"></i>
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+<script>
+    function toggleAddRepairForm() {
+        const form = document.getElementById('add-repair-form');
+        form.classList.toggle('hidden');
+    }
+
+    function toggleAddCostForm() {
+        const form = document.getElementById('add-cost-form');
+        form.classList.toggle('hidden');
+    }
+
+    function toggleEditRepairForm(id) {
+        const form = document.getElementById(`edit-repair-form-${id}`);
+        if (form) {
+            form.classList.toggle('hidden');
+        }
+    }
+
+    function toggleEditCostForm(id) {
+        const form = document.getElementById(`edit-cost-form-${id}`);
+        if (form) {
+            form.classList.toggle('hidden');
+        }
+    }
+
+    function addSupplyField(containerId = 'supply-usage-fields') {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const first = container.querySelector('.supply-field');
+        const clone = first.cloneNode(true);
+        clone.querySelectorAll('input').forEach(i => i.value = '');
+        clone.querySelectorAll('select').forEach(s => s.selectedIndex = 0);
+        container.appendChild(clone);
+    }
+</script>
+{% endblock %}

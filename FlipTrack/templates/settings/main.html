@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <a href="{{ url_for('settings') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">Main</a>
+            <a href="{{ url_for('settings_appearance') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Appearance</a>
+            <a href="{{ url_for('settings_users') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Users</a>
+            <a href="{{ url_for('settings_backend') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Backend</a>
+        </nav>
+    </div>
+
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h1 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white">
+                <i data-feather="settings" class="inline h-6 w-6 mr-2"></i>
+                Company Settings
+            </h1>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Manage company information and application settings
+            </p>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <!-- Company Information -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="briefcase" class="inline h-5 w-5 mr-2"></i>
+                    Company Information
+                </h3>
+                
+                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                    <div>
+                        <label for="company_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name</label>
+                        <input type="text" name="company_name" id="company_name" 
+                               value="{{ company_name }}"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    
+                      <div>
+                          <label for="logo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Company Logo</label>
+                          <div class="mt-1 flex items-center space-x-4">
+                              {% if company_logo %}
+                              <img src="{{ url_for('public_file', filename=company_logo) }}"
+                                   alt="Current logo"
+                                   class="h-12 w-12 rounded-full object-cover">
+                              {% else %}
+                              <div class="h-12 w-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                                  <i data-feather="image" class="h-6 w-6 text-gray-400"></i>
+                              </div>
+                              {% endif %}
+                              <input type="file" name="logo" id="logo" accept="image/*"
+                                     class="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                          </div>
+                          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">PNG, JPG, HEIC up to 10MB</p>
+                      </div>
+
+                      <div>
+                          <label for="favicon" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Browser Favicon</label>
+                          <div class="mt-1 flex items-center space-x-4">
+                              {% if favicon %}
+                              <img src="{{ url_for('public_file', filename=favicon) }}"
+                                   alt="Current favicon"
+                                   class="h-8 w-8 object-cover rounded">
+                              {% else %}
+                              <div class="h-8 w-8 bg-gray-300 dark:bg-gray-600 flex items-center justify-center favicon-placeholder">
+                                  <i data-feather="star" class="h-4 w-4 text-gray-400"></i>
+                              </div>
+                              {% endif %}
+                              <input type="file" name="favicon" id="favicon" accept="image/*"
+                                     class="block text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                          </div>
+                          <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">ICO or image up to 10MB</p>
+                      </div>
+                  </div>
+              </div>
+          </div>
+
+        <!-- Watchlist Settings -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="eye" class="inline h-5 w-5 mr-2"></i>
+                    Watchlist Settings
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex items-center h-5">
+                            <input id="watchlist_enabled" name="watchlist_enabled" type="checkbox"
+                                   {% if watchlist_enabled %}checked{% endif %}
+                                   class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                        </div>
+                        <div class="ml-3">
+                            <label for="watchlist_enabled" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Enable Watchlist Features
+                            </label>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Allow users to monitor and import HiBid auction lots
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        <div>
+                            <label for="default_buyer_premium" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Default Buyer's Premium (%)
+                            </label>
+                            <input type="number" name="default_buyer_premium" step="0.1" min="0" max="50"
+                                   value="{{ default_buyer_premium or '10.0' }}"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        </div>
+                        
+                        <div>
+                            <label for="default_tax_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Default Tax Rate (%)
+                            </label>
+                            <input type="number" name="default_tax_rate" step="0.1" min="0" max="25"
+                                   value="{{ default_tax_rate or '8.5' }}"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        </div>
+                        
+                        <div>
+                            <label for="min_refresh_interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Min Refresh Interval (seconds)
+                            </label>
+                            <input type="number" name="min_refresh_interval" min="10" max="300"
+                                   value="{{ min_refresh_interval or '30' }}"
+                                   class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-md p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i data-feather="alert-triangle" class="h-5 w-5 text-yellow-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200">Scraping Guidelines</h3>
+                                <div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li>Be respectful when scraping auction sites</li>
+                                        <li>Minimum refresh interval prevents excessive requests</li>
+                                        <li>Buyer's premium and tax rates are used for cost calculations</li>
+                                        <li>These settings apply as defaults but can be overridden per lot</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Settings -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="bar-chart-2" class="inline h-5 w-5 mr-2"></i>
+                    Dashboard Settings
+                </h3>
+
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="dashboard_show_projections" name="dashboard_show_projections" type="checkbox"
+                               {% if dashboard_show_projections %}checked{% endif %}
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3">
+                        <label for="dashboard_show_projections" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Show Expected Profit and ROI
+                        </label>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Display projected metrics for unsold items on the dashboard.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Management -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="database" class="inline h-5 w-5 mr-2"></i>
+                    Data Management
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Export Backup</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Download a complete backup (database and images) as a ZIP file
+                            </p>
+                        </div>
+                        <a href="#" class="export-link inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i data-feather="download" class="h-4 w-4 mr-2"></i>
+                            Export Data
+                        </a>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-600">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900 dark:text-white">Import Backup</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">
+                                Upload a previously exported ZIP file to restore data
+                            </p>
+                        </div>
+                        <div class="inline">
+                            <label for="import-file"
+                                   class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+                                <i data-feather="upload" class="h-4 w-4 mr-2"></i>
+                                Import Data
+                            </label>
+                            <input id="import-file" name="file" type="file" accept=".zip" class="sr-only" form="import-form" onchange="this.form.submit()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex justify-end">
+                    <button type="submit"
+                            class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i data-feather="save" class="h-5 w-5 mr-2"></i>
+                        Save Settings
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <form id="import-form" method="POST" enctype="multipart/form-data" action="{{ url_for('import_items') }}"></form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Theme preview functionality
+    document.getElementById('theme').addEventListener('change', function() {
+        const theme = this.value;
+        // Apply theme immediately for preview
+        if (window.themeManager) {
+            themeManager.setTheme(theme);
+        }
+    });
+
+    // Logo preview
+    document.getElementById('logo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Find the current logo image and update it
+                const currentLogo = document.querySelector('img[alt="Current logo"]');
+                if (currentLogo) {
+                    currentLogo.src = e.target.result;
+                } else {
+                    // Replace the placeholder with the new image
+                    const placeholder = document.querySelector('.h-12.w-12.rounded-full.bg-gray-300');
+                    if (placeholder) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = 'New logo';
+                        img.className = 'h-12 w-12 rounded-full object-cover';
+                        placeholder.parentNode.replaceChild(img, placeholder);
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Favicon preview
+    document.getElementById('favicon').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const currentIcon = document.querySelector('img[alt="Current favicon"]');
+                if (currentIcon) {
+                    currentIcon.src = e.target.result;
+                } else {
+                    const placeholder = document.querySelector('.favicon-placeholder');
+                    if (placeholder) {
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = 'New favicon';
+                        img.className = 'h-8 w-8 object-cover rounded';
+                        placeholder.parentNode.replaceChild(img, placeholder);
+                    }
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}
+{% if item %}Edit {{ item.name }}{% else %}New Item{% endif %} - {{ super() }}
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center space-x-3">
+                <a href="{% if item %}{{ url_for('items.item_detail', item_id=item.id) }}{% else %}{{ url_for('dashboard') }}{% endif %}" 
+                   class="text-gray-400 hover:text-gray-500">
+                    <i data-feather="arrow-left" class="h-5 w-5"></i>
+                </a>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    {% if item %}Edit {{ item.name }}{% else %}Add New Item{% endif %}
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <!-- Basic Information -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="info" class="inline h-5 w-5 mr-2"></i>
+                    Basic Information
+                </h3>
+                
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label for="name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Item Name *</label>
+                        <input type="text" name="name" id="name" required
+                               value="{% if item %}{{ item.name }}{% endif %}"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="Enter item name">
+                    </div>
+                    
+                    <div>
+                        <label for="purchase_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Purchase Date *</label>
+                        <input type="date" name="purchase_date" id="purchase_date" required
+                               value="{% if item %}{{ item.purchase_date.isoformat() }}{% endif %}"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="category" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Category</label>
+                        <input type="text" name="category" id="category"
+                               value="{% if item %}{{ item.category or '' }}{% endif %}"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="e.g. Electronics">
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Status</label>
+                        {% set current_status = item.status if item else 'active' %}
+                        <select name="status" id="status"
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                            <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                            <option value="listed" {% if current_status == 'listed' %}selected{% endif %}>Listed</option>
+                            <option value="in_repair" {% if current_status == 'in_repair' %}selected{% endif %}>In Repair</option>
+                            <option value="sold" {% if current_status == 'sold' %}selected{% endif %}>Sold</option>
+                        </select>
+                    </div>
+
+                    <div class="sm:col-span-2 flex items-center">
+                        <input id="is_auction" name="is_auction" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded" {% if item and item.is_auction %}checked{% endif %}>
+                        <label for="is_auction" class="ml-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Auction Item</label>
+                    </div>
+
+                    <div>
+                        <label for="purchase_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Purchase Price *</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" name="purchase_price" id="purchase_price" step="0.01" min="0" required
+                                   value="{% if item %}{{ '%.2f'|format(cents_to_dollars(item.purchase_price)) }}{% endif %}"
+                                   class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="expected_sale_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expected Sale Price</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" name="expected_sale_price" id="expected_sale_price" step="0.01" min="0"
+                                   value="{% if item and item.expected_sale_price is not none %}{{ '%.2f'|format(cents_to_dollars(item.expected_sale_price)) }}{% endif %}"
+                                   class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div id="auction-fields" class="sm:col-span-2 {% if not item or not item.is_auction %}hidden{% endif %}">
+                        <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+                            <div>
+                                <label for="auction_bid" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Winning Bid *</label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    <input type="number" name="auction_bid" id="auction_bid" step="0.01" min="0"
+                                           value="{% if item and item.auction_bid is not none %}{{ '%.2f'|format(cents_to_dollars(item.auction_bid)) }}{% endif %}"
+                                           class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                           placeholder="0.00">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="buyer_premium" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Buyer Premium (%)</label>
+                                <input type="number" name="buyer_premium" id="buyer_premium" step="0.01" min="0"
+                                       value="{% if item and item.auction_buyer_premium is not none %}{{ item.auction_buyer_premium }}{% else %}{{ default_buyer_premium }}{% endif %}"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="tax_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tax Rate (%)</label>
+                                <input type="number" name="tax_rate" id="tax_rate" step="0.01" min="0"
+                                       value="{% if item and item.auction_tax_rate is not none %}{{ item.auction_tax_rate }}{% else %}{{ default_tax_rate }}{% endif %}"
+                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="sm:col-span-2">
+                        <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                        <textarea name="notes" id="notes" rows="3"
+                                  class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                  placeholder="Additional notes about this item">{% if item %}{{ item.notes }}{% endif %}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sale Information -->
+        {% if item %}
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                {% if item.is_sold %}
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="dollar-sign" class="inline h-5 w-5 mr-2"></i>
+                    Sale Information
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Update the sale date and price.</p>
+                {% else %}
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="dollar-sign" class="inline h-5 w-5 mr-2"></i>
+                    Mark as Sold
+                </h3>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">Fill out these fields to mark the item as sold.</p>
+                {% endif %}
+
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="sale_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sale Date</label>
+                        <input type="date" name="sale_date" id="sale_date"
+                               value="{% if item.is_sold and item.sale_date %}{{ item.sale_date.isoformat() }}{% endif %}"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+
+                    <div>
+                        <label for="sale_price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sale Price</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" name="sale_price" id="sale_price" step="0.01" min="0"
+                                   value="{% if item.is_sold and item.sale_price is not none %}{{ '%.2f'|format(cents_to_dollars(item.sale_price)) }}{% endif %}"
+                                   class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                   placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+
+                {% if not item.is_sold %}
+                <div class="mt-4">
+                    <button type="submit" name="action" value="mark_sold"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            onclick="validateSaleInfo(event)">
+                        <i data-feather="check-circle" class="h-4 w-4 mr-2"></i>
+                        Mark as Sold
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Images -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="camera" class="inline h-5 w-5 mr-2"></i>
+                    Photos
+                </h3>
+                
+                <!-- Existing Images (if editing) -->
+                {% if item and item.images %}
+                <div class="mb-4">
+                    <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Current Photos</h4>
+                    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                        {% for image in item.images %}
+                        <div class="relative group">
+                            <img src="{{ url_for('uploaded_file', filename=image.filename) }}" 
+                                 alt="{{ item.name }}"
+                                 class="h-24 w-full object-cover rounded-lg border-2 {% if item.thumbnail_id == image.id %}border-indigo-500{% else %}border-gray-300 dark:border-gray-600{% endif %}">
+                            
+                            <div class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 rounded-lg transition-opacity">
+                                <div class="flex items-center justify-center h-full space-x-2 opacity-0 group-hover:opacity-100">
+                                    {% if item.thumbnail_id != image.id %}
+                                    <button type="submit" name="thumbnail_id" value="{{ image.id }}"
+                                            class="text-white hover:text-gray-300"
+                                            title="Set as thumbnail">
+                                        <i data-feather="image" class="h-5 w-5"></i>
+                                    </button>
+                                    {% else %}
+                                    <span class="text-white">
+                                        <i data-feather="star" class="h-5 w-5"></i>
+                                    </span>
+                                    {% endif %}
+                                    <button type="submit"
+                                            formaction="{{ url_for('items.delete_image', image_id=image.id) }}"
+                                            formmethod="POST"
+                                            data-confirm="Delete this image?"
+                                            class="text-white hover:text-red-300"
+                                            title="Delete image">
+                                        <i data-feather="trash-2" class="h-5 w-5"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Upload New Images -->
+                <div>
+                    <label for="images" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Add Photos</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <i data-feather="upload" class="mx-auto h-12 w-12 text-gray-400"></i>
+                            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+                                <label for="images" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                    <span>Upload photos</span>
+                                    <input id="images" name="images" type="file" accept="image/*" multiple class="sr-only">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, HEIC up to 10MB each</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        {% if item %}
+                        <button type="submit" name="action" value="delete"
+                                data-confirm="Are you sure you want to delete this item? This action cannot be undone."
+                                class="inline-flex items-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
+                            <i data-feather="trash-2" class="h-4 w-4 mr-2"></i>
+                            Delete Item
+                        </button>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex space-x-3">
+                        <a href="{% if item %}{{ url_for('items.item_detail', item_id=item.id) }}{% else %}{{ url_for('dashboard') }}{% endif %}" 
+                           class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            Cancel
+                        </a>
+                        <button type="submit" name="action" value="update"
+                                class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i data-feather="save" class="h-4 w-4 mr-2"></i>
+                            {% if item %}Update Item{% else %}Create Item{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function validateSaleInfo(e) {
+        e.preventDefault();
+        const saleDate = document.getElementById('sale_date').value;
+        const salePrice = document.getElementById('sale_price').value;
+
+        if (!saleDate || !salePrice) {
+            showModal('Please fill in both sale date and sale price.', { showCancel: false });
+            return;
+        }
+
+        showModal('Mark this item as sold?').then(function(ok) {
+            if (ok) {
+                const btn = e.target;
+                if (btn.form) {
+                    if (btn.name) {
+                        const hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = btn.name;
+                        hidden.value = btn.value;
+                        btn.form.appendChild(hidden);
+                    }
+                    btn.form.submit();
+                }
+            }
+        });
+    }
+
+    function toggleAuctionFields() {
+        const isAuction = document.getElementById('is_auction').checked;
+        const fields = document.getElementById('auction-fields');
+        const purchasePrice = document.getElementById('purchase_price');
+        if (isAuction) {
+            fields.classList.remove('hidden');
+            purchasePrice.readOnly = true;
+            purchasePrice.classList.add('bg-gray-100');
+            updateFinalPrice();
+        } else {
+            fields.classList.add('hidden');
+            purchasePrice.readOnly = false;
+            purchasePrice.classList.remove('bg-gray-100');
+        }
+    }
+
+    function updateFinalPrice() {
+        if (!document.getElementById('is_auction').checked) return;
+        const bid = parseFloat(document.getElementById('auction_bid').value) || 0;
+        const premium = parseFloat(document.getElementById('buyer_premium').value) || 0;
+        const tax = parseFloat(document.getElementById('tax_rate').value) || 0;
+        const premiumAmount = bid * (premium / 100);
+        const subtotal = bid + premiumAmount;
+        const taxAmount = subtotal * (tax / 100);
+        const total = bid + premiumAmount + taxAmount;
+        document.getElementById('purchase_price').value = total.toFixed(2);
+    }
+
+    document.getElementById('is_auction').addEventListener('change', toggleAuctionFields);
+    ['auction_bid', 'buyer_premium', 'tax_rate'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', updateFinalPrice);
+        }
+    });
+    toggleAuctionFields();
+
+    // File upload preview
+    document.getElementById('images').addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files.length > 0) {
+            const fileNames = Array.from(files).map(file => file.name).join(', ');
+            const label = e.target.previousElementSibling;
+            label.textContent = `${files.length} file(s) selected: ${fileNames}`;
+        }
+    });
+</script>
+{% endblock %}

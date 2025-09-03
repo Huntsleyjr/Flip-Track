@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Supplies - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <i data-feather="archive" class="inline h-6 w-6 mr-2"></i>
+                Supplies
+            </h1>
+            <form method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <input type="text" name="name" required placeholder="Name"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <input type="number" step="0.01" min="0" name="quantity" required placeholder="Quantity"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <input type="text" name="unit" placeholder="Unit"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <input type="number" step="0.01" min="0" name="cost" placeholder="Total Cost"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <div class="md:col-span-4 flex justify-end">
+                    <button type="submit"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Add Supply
+                    </button>
+                </div>
+            </form>
+            {% if supplies %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total Cost</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
+                        {% for supply in supplies %}
+                        <tr>
+                            <form method="POST" action="{{ url_for('edit_supply', supply_id=supply.id) }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <input type="text" name="name" value="{{ supply.name }}" required class="w-full bg-transparent">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <div class="flex space-x-2">
+                                    <input type="number" step="0.01" min="0" name="quantity" value="{{ '%.2f'|format(supply.quantity) }}" class="w-24 bg-transparent">
+                                    <input type="text" name="unit" value="{{ supply.unit or '' }}" class="w-20 bg-transparent">
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <input type="number" step="0.01" min="0" name="cost" value="{{ '%.2f'|format(cents_to_dollars(supply.cost_cents)) }}" class="w-32 bg-transparent">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <div class="flex space-x-2">
+                                    <button type="submit" class="text-indigo-600 hover:text-indigo-500">Save</button>
+                            </form>
+                                    <form method="POST" action="{{ url_for('delete_supply', supply_id=supply.id) }}" data-confirm="Delete this supply?">
+                                        <button type="submit" class="text-red-600 hover:text-red-500">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 dark:text-gray-400">No supplies added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

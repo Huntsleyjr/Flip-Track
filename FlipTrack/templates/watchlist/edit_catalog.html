@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Catalog - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('catalog_detail', catalog_id=catalog.id) }}"
+                   class="text-gray-400 hover:text-gray-500">
+                    <i data-feather="arrow-left" class="h-5 w-5"></i>
+                </a>
+                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    Edit Catalog
+                </h1>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" class="space-y-6">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6 space-y-6">
+                <div>
+                    <label for="title" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                    <input type="text" name="title" id="title"
+                           value="{{ catalog.title or '' }}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+                <div>
+                    <label for="auction_date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Auction Date</label>
+                    <input type="date" name="auction_date" id="auction_date"
+                           value="{% if catalog.auction_date %}{{ catalog.auction_date.isoformat() }}{% endif %}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+                <div>
+                    <label for="url" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Catalog URL</label>
+                    <input type="text" name="url" id="url" required value="{{ catalog.url }}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+            </div>
+        </div>
+        <div>
+            <button type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i data-feather="save" class="h-4 w-4 mr-2"></i>
+                Save
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

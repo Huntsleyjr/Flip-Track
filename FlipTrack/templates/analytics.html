@@ -1,0 +1,396 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate">
+                        <i data-feather="bar-chart-2" class="inline h-6 w-6 mr-2"></i>
+                        Sales Analytics
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        View performance metrics for your inventory sales
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time Range Selector -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-2 sm:space-y-0">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">Time Period</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <a href="{{ url_for('analytics', range='week', offset=offset) }}"
+                           class="px-3 py-2 text-sm font-medium rounded-md {% if range_type == 'week' %}bg-indigo-600 text-white{% else %}text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}">
+                            Week
+                        </a>
+                        <a href="{{ url_for('analytics', range='month', offset=offset) }}"
+                           class="px-3 py-2 text-sm font-medium rounded-md {% if range_type == 'month' %}bg-indigo-600 text-white{% else %}text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}">
+                            Month
+                        </a>
+                        <a href="{{ url_for('analytics', range='year', offset=offset) }}"
+                           class="px-3 py-2 text-sm font-medium rounded-md {% if range_type == 'year' %}bg-indigo-600 text-white{% else %}text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600{% endif %}">
+                            Year
+                        </a>
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 mt-4 sm:mt-0">
+                    <a href="{{ url_for('analytics', range=range_type, offset=offset+1) }}"
+                       class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i data-feather="chevron-left" class="h-5 w-5"></i>
+                    </a>
+                    <span class="text-sm font-medium text-gray-900 dark:text-white min-w-0 text-center px-3">
+                        {% if range_type == 'week' %}
+                        {{ start_date.strftime('%b %d') }} - {{ end_date.strftime('%b %d, %Y') }}
+                        {% elif range_type == 'year' %}
+                        {{ start_date.strftime('%Y') }}
+                        {% else %}
+                        {{ start_date.strftime('%B %Y') }}
+                        {% endif %}
+                    </span>
+                    <a href="{{ url_for('analytics', range=range_type, offset=offset-1) }}"
+                       class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 {% if offset <= 0 %}opacity-50 pointer-events-none{% endif %}">
+                        <i data-feather="chevron-right" class="h-5 w-5"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-5 mb-6">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="shopping-cart" class="h-6 w-6 text-indigo-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Items Sold</dt>
+                            <dd class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_sales }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="dollar-sign" class="h-6 w-6 text-green-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Total Revenue</dt>
+                            <dd class="text-2xl font-bold text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(total_revenue)) }}</dd>
+                            {% if revenue_change is not none %}
+                            <p class="mt-1 text-sm {% if revenue_change >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                {{ "%.1f"|format(revenue_change) }}% from previous
+                            </p>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="credit-card" class="h-6 w-6 text-red-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Asset Purchases</dt>
+                            <dd class="text-2xl font-bold text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(total_assets)) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="trending-up" class="h-6 w-6 {% if total_profit >= 0 %}text-green-400{% else %}text-red-400{% endif %}"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Profit</dt>
+                            <dd class="text-2xl font-bold {% if total_profit >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                ${{ "%.2f"|format(cents_to_dollars(total_profit)) }}
+                            </dd>
+                            {% if profit_change is not none %}
+                            <p class="mt-1 text-sm {% if profit_change >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                {{ "%.1f"|format(profit_change) }}% from previous
+                            </p>
+                            {% endif %}
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="percent" class="h-6 w-6 {% if avg_roi >= 0 %}text-green-400{% else %}text-red-400{% endif %}"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Avg ROI</dt>
+                            <dd class="text-2xl font-bold {% if avg_roi >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                {{ "%.1f"|format(avg_roi) }}%
+                            </dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Projected Metrics -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-2 mb-6">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="activity" class="h-6 w-6 text-purple-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Projected Profit</dt>
+                            <dd class="text-2xl font-bold text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(projected_profit)) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="clock" class="h-6 w-6 text-indigo-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Median Time to Sale</dt>
+                            <dd class="text-2xl font-bold text-gray-900 dark:text-white">{{ median_time_to_sale }} days</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Revenue & Profit</h3>
+            <canvas id="salesChart"></canvas>
+        </div>
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-4">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Revenue by Category</h3>
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+
+
+    <!-- Detailed Sales List -->
+    {% if sold_items %}
+    <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
+        <div class="px-4 py-5 sm:px-6 border-b border-gray-200 dark:border-gray-600">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                <i data-feather="list" class="inline h-5 w-5 mr-2"></i>
+                Sales Detail
+            </h3>
+            <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                Items sold during this period
+            </p>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Item
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Sale Date
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Purchase Price
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Total Costs
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Sale Price
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Profit
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            ROI
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                            Actions
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
+                    {% for item in sold_items %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer analytics-row"
+                        data-url="{{ url_for('items.item_detail', item_id=item.id) }}">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                {% if item.thumbnail %}
+                                <img class="h-10 w-10 rounded-lg object-cover" src="{{ url_for('uploaded_file', filename=item.thumbnail.filename) }}" alt="{{ item.name }}">
+                                {% elif item.images %}
+                                <img class="h-10 w-10 rounded-lg object-cover" src="{{ url_for('uploaded_file', filename=item.images[0].filename) }}" alt="{{ item.name }}">
+                                {% else %}
+                                <div class="h-10 w-10 rounded-lg bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                                    <i data-feather="package" class="h-5 w-5 text-gray-400"></i>
+                                </div>
+                                {% endif %}
+                                <div class="ml-4">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        Purchased: {{ item.purchase_date.strftime('%b %d, %Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {{ item.sale_date.strftime('%b %d, %Y') }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${{ "%.2f"|format(cents_to_dollars(item.purchase_price)) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${{ "%.2f"|format(cents_to_dollars(item.total_costs)) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            ${{ "%.2f"|format(cents_to_dollars(item.sale_price)) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm {% if item.profit >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                            ${{ "%.2f"|format(cents_to_dollars(item.profit)) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm {% if item.roi >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                            {% if item.roi is not none %}{{ "%.1f"|format(item.roi) }}%{% else %}—{% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <a href="{{ url_for('items.item_detail', item_id=item.id) }}" 
+                               class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">
+                                <i data-feather="eye" class="h-4 w-4"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center bg-white dark:bg-gray-800 shadow rounded-lg py-12">
+        <i data-feather="bar-chart-2" class="mx-auto h-12 w-12 text-gray-400"></i>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No sales data</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            No items were sold during this period.
+        </p>
+        <div class="mt-6">
+            <a href="{{ url_for('dashboard') }}" 
+               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i data-feather="package" class="h-4 w-4 mr-2"></i>
+                View Inventory
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.analytics-row').forEach(row => {
+        row.addEventListener('click', e => {
+            if (e.target.closest('a, button')) return;
+            window.location = row.dataset.url;
+        });
+    });
+
+    const labels = {{ chart_labels|tojson }};
+    const revenueData = {{ chart_revenue|tojson }};
+    const profitData = {{ chart_profit|tojson }};
+    const cashFlowData = {{ chart_cash_flow|tojson }};
+    const ctx = document.getElementById('salesChart');
+    if (ctx && labels.length) {
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: 'Revenue',
+                        data: revenueData,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99,102,241,0.2)',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Profit',
+                        data: profitData,
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16,185,129,0.2)',
+                        fill: false,
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Cash Flow',
+                        data: cashFlowData,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245,158,11,0.2)',
+                        fill: false,
+                        tension: 0.1
+                    }
+                ]
+            }
+        });
+    }
+
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx) {
+        new Chart(catCtx, {
+            type: 'pie',
+            data: {
+                labels: {{ category_labels|tojson }},
+                datasets: [{
+                    data: {{ category_values|tojson }},
+                    backgroundColor: ['#6366f1','#ef4444','#10b981','#f59e0b','#3b82f6','#8b5cf6','#ec4899','#14b8a6']
+                }]
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,563 @@
+/* Custom styles for the inventory tracking application */
+
+/* Base styles and utilities */
+/* Ensure text and interactive elements wrap on small screens */
+body, button, a {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.responsive-button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+}
+
+.line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+/* Image gallery styles */
+.image-gallery {
+    position: relative;
+}
+
+.image-gallery .thumbnail-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.image-gallery .thumbnail {
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 2px solid transparent;
+}
+
+.image-gallery .thumbnail:hover {
+    border-color: rgba(156, 163, 175, 0.5);
+    transform: scale(1.05);
+}
+
+.image-gallery .thumbnail.active {
+    border-color: rgb(99, 102, 241);
+    transform: scale(1.02);
+}
+
+/* Image viewer modal styles */
+.image-viewer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 1rem;
+}
+
+.image-viewer img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 0.5rem;
+}
+
+.image-viewer .close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    color: white;
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    border-radius: 50%;
+    width: 3rem;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.image-viewer .close-button:hover {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.image-viewer .controls {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+    padding: 0.5rem;
+    border-radius: 2rem;
+}
+
+.image-viewer .control-button {
+    color: white;
+    background: transparent;
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.image-viewer .control-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Card hover effects */
+.card-hover {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.dark .card-hover:hover {
+    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.status-badge.pending {
+    background-color: rgb(243, 244, 246);
+    color: rgb(55, 65, 81);
+}
+
+.dark .status-badge.pending {
+    background-color: rgb(55, 65, 81);
+    color: rgb(209, 213, 219);
+}
+
+.status-badge.in-progress {
+    background-color: rgb(254, 243, 199);
+    color: rgb(146, 64, 14);
+}
+
+.dark .status-badge.in-progress {
+    background-color: rgb(146, 64, 14);
+    color: rgb(254, 243, 199);
+}
+
+.status-badge.completed {
+    background-color: rgb(220, 252, 231);
+    color: rgb(22, 101, 52);
+}
+
+.dark .status-badge.completed {
+    background-color: rgb(22, 101, 52);
+    color: rgb(220, 252, 231);
+}
+
+.status-badge.sold {
+    background-color: rgb(220, 252, 231);
+    color: rgb(22, 101, 52);
+}
+
+.dark .status-badge.sold {
+    background-color: rgb(22, 101, 52);
+    color: rgb(220, 252, 231);
+}
+
+.status-badge.active {
+    background-color: rgb(219, 234, 254);
+    color: rgb(30, 64, 175);
+}
+
+.dark .status-badge.active {
+    background-color: rgb(30, 64, 175);
+    color: rgb(219, 234, 254);
+}
+
+.status-badge.listed {
+    background-color: rgb(238, 242, 255);
+    color: rgb(55, 48, 163);
+}
+
+.dark .status-badge.listed {
+    background-color: rgb(30, 64, 175);
+    color: rgb(219, 234, 254);
+}
+
+.status-badge.in-repair {
+    background-color: rgb(254, 243, 199);
+    color: rgb(146, 64, 14);
+}
+
+.dark .status-badge.in-repair {
+    background-color: rgb(30, 64, 175);
+    color: rgb(219, 234, 254);
+}
+
+/* Form improvements */
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.form-input {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 0.375rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: rgb(99, 102, 241);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.dark .form-input {
+    background-color: rgb(55, 65, 81);
+    border-color: rgb(75, 85, 99);
+    color: white;
+}
+
+.dark .form-input:focus {
+    border-color: rgb(99, 102, 241);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+/* File upload styling */
+.file-upload-area {
+    border: 2px dashed rgb(209, 213, 219);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    text-align: center;
+    transition: border-color 0.2s ease-in-out, background-color 0.2s ease-in-out;
+}
+
+.file-upload-area:hover {
+    border-color: rgb(99, 102, 241);
+    background-color: rgb(249, 250, 251);
+}
+
+.dark .file-upload-area {
+    border-color: rgb(75, 85, 99);
+}
+
+.dark .file-upload-area:hover {
+    border-color: rgb(99, 102, 241);
+    background-color: rgb(55, 65, 81);
+}
+
+.file-upload-area.dragover {
+    border-color: rgb(99, 102, 241);
+    background-color: rgb(238, 242, 255);
+}
+
+.dark .file-upload-area.dragover {
+    background-color: rgb(67, 56, 202);
+}
+
+/* Table improvements */
+.data-table {
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    border-radius: 0.5rem;
+}
+
+.data-table th {
+    background-color: rgb(249, 250, 251);
+    padding: 0.75rem 1.5rem;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgb(107, 114, 128);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.dark .data-table th {
+    background-color: rgb(55, 65, 81);
+    color: rgb(209, 213, 219);
+}
+
+.data-table td {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid rgb(229, 231, 235);
+}
+
+.dark .data-table td {
+    border-color: rgb(75, 85, 99);
+}
+
+.data-table tr:hover {
+    background-color: rgb(249, 250, 251);
+}
+
+.dark .data-table tr:hover {
+    background-color: rgb(55, 65, 81);
+}
+
+/* Loading states */
+.loading-spinner {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Custom scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: rgb(243, 244, 246);
+    border-radius: 3px;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-track {
+    background: rgb(55, 65, 81);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(156, 163, 175);
+    border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(107, 114, 128);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgb(107, 114, 128);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgb(156, 163, 175);
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+    .hide-on-mobile {
+        display: none;
+    }
+    
+    .stack-on-mobile {
+        flex-direction: column;
+    }
+    
+    .full-width-on-mobile {
+        width: 100%;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-break-after {
+        page-break-after: always;
+    }
+    
+    .print-break-before {
+        page-break-before: always;
+    }
+}
+
+/* Animation utilities */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.slide-in-right {
+    animation: slideInRight 0.3s ease-in-out;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.slide-in-up {
+    animation: slideInUp 0.3s ease-in-out;
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+}
+
+/* Focus improvements for accessibility */
+.focus-visible:focus {
+    outline: 2px solid rgb(99, 102, 241);
+    outline-offset: 2px;
+}
+
+/* Custom checkbox and radio styles */
+.custom-checkbox {
+    appearance: none;
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 0.25rem;
+    background-color: white;
+    cursor: pointer;
+    position: relative;
+}
+
+.custom-checkbox:checked {
+    background-color: rgb(99, 102, 241);
+    border-color: rgb(99, 102, 241);
+}
+
+.custom-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0.25rem;
+    height: 0.5rem;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -60%) rotate(45deg);
+}
+
+.dark .custom-checkbox {
+    background-color: rgb(55, 65, 81);
+    border-color: rgb(75, 85, 99);
+}
+
+/* Utility classes for common patterns */
+.aspect-square {
+    aspect-ratio: 1 / 1;
+}
+
+.aspect-video {
+    aspect-ratio: 16 / 9;
+}
+
+.gradient-bg {
+    background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(139, 92, 246) 100%);
+}
+
+.text-gradient {
+    background: linear-gradient(135deg, rgb(99, 102, 241) 0%, rgb(139, 92, 246) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Dark mode improvements */
+.dark {
+    color-scheme: dark;
+}
+
+/* Custom button variants */
+.btn-primary {
+    background-color: rgb(99, 102, 241);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-primary:hover {
+    background-color: rgb(79, 70, 229);
+}
+
+.btn-secondary {
+    background-color: rgb(107, 114, 128);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-secondary:hover {
+    background-color: rgb(75, 85, 99);
+}
+
+.btn-success {
+    background-color: rgb(34, 197, 94);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-success:hover {
+    background-color: rgb(22, 163, 74);
+}
+
+.btn-danger {
+    background-color: rgb(239, 68, 68);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.btn-danger:hover {
+    background-color: rgb(220, 38, 38);
+}

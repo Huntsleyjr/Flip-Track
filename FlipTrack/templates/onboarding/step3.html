@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Setup - Watchlist Settings - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl w-full space-y-8">
+        <div class="text-center">
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">Watchlist Configuration</h2>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 3 of 3: Configure auction monitoring defaults</p>
+        </div>
+        
+        <form class="mt-8 space-y-6" method="POST">
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 space-y-6">
+                <!-- Enable Watchlist -->
+                <div class="flex items-start">
+                    <div class="flex items-center h-5">
+                        <input id="enable_watchlist" name="enable_watchlist" type="checkbox" checked
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    </div>
+                    <div class="ml-3 text-sm">
+                        <label for="enable_watchlist" class="font-medium text-gray-700 dark:text-gray-300">Enable Watchlist Features</label>
+                        <p class="text-gray-500 dark:text-gray-400">Allow monitoring and importing HiBid auction lots</p>
+                    </div>
+                </div>
+
+                <!-- Default Settings -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                    <div>
+                        <label for="buyer_premium" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Default Buyer's Premium (%)
+                        </label>
+                        <input id="buyer_premium" name="buyer_premium" type="number" step="0.1" value="10.0" min="0" max="50"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Typical auction house fees</p>
+                    </div>
+
+                    <div>
+                        <label for="tax_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Default Tax Rate (%)
+                        </label>
+                        <input id="tax_rate" name="tax_rate" type="number" step="0.1" value="8.5" min="0" max="25"
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Local sales tax rate</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="refresh_interval" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Minimum Refresh Interval (seconds)
+                    </label>
+                    <input id="refresh_interval" name="refresh_interval" type="number" value="30" min="10" max="300"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Prevents too frequent scraping requests</p>
+                </div>
+
+                <!-- Info Box -->
+                <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <i data-feather="info" class="h-5 w-5 text-blue-400"></i>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">About Watchlist Features</h3>
+                            <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                                <ul class="list-disc list-inside space-y-1">
+                                    <li>Monitor HiBid auction lots and track current bids</li>
+                                    <li>Calculate total costs including buyer's premium and taxes</li>
+                                    <li>Import winning lots directly into your inventory</li>
+                                    <li>These settings can be changed later in the admin settings</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <a href="{{ url_for('onboarding.onboarding_step2') }}"
+                   class="group relative flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i data-feather="arrow-left" class="mr-2 h-4 w-4"></i>
+                    Previous
+                </a>
+                <button type="submit"
+                        class="group relative flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Complete Setup
+                    <i data-feather="check" class="ml-2 h-4 w-4"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

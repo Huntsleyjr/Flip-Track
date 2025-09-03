@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Watchlist - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate">
+                        <i data-feather="eye" class="inline h-6 w-6 mr-2"></i>
+                        Watchlist Catalogs
+                    </h1>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Monitor HiBid auction catalogs and lots
+                    </p>
+                </div>
+                <div class="mt-4 sm:mt-0 sm:ml-4 sm:flex-shrink-0">
+                    <a href="{{ url_for('create_catalog_manual') }}"
+                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i data-feather="file-plus" class="h-4 w-4 mr-2"></i>
+                        Create catalog manually
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add URL Form -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <i data-feather="plus" class="inline h-5 w-5 mr-2"></i>
+                Add Catalog
+            </h3>
+
+            <form method="POST" action="{{ url_for('add_watchlist_item') }}" id="add-catalog-form">
+                <div class="space-y-4 sm:space-y-0 sm:flex sm:space-x-4">
+                    <div class="flex-1">
+                        <label for="catalog_url" class="sr-only">HiBid Catalog URL</label>
+                        <input type="url" name="catalog_url" id="catalog_url" required
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="Enter HiBid catalog URL">
+                    </div>
+                    <div class="flex-1">
+                        <label for="lot_numbers" class="sr-only">Lot Numbers</label>
+                        <input type="text" name="lot_numbers" id="lot_numbers"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="Comma-separated lot numbers">
+                    </div>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i data-feather="plus" class="h-4 w-4 mr-2"></i>
+                        Add to Watchlist
+                    </button>
+                </div>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Provide the catalog URL and optional comma-separated lot numbers. Leave lot numbers blank to import all lots.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
+            <p class="text-lg font-medium text-gray-900 dark:text-white">
+                Adding catalog, please wait...
+            </p>
+        </div>
+    </div>
+
+    <!-- Catalogs List -->
+    {% if catalogs %}
+    <div class="bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-md">
+        <ul role="list" class="divide-y divide-gray-200 dark:divide-gray-600">
+            {% for catalog in catalogs %}
+            <li>
+                <div class="catalog-row block hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
+                     data-url="{{ url_for('catalog_detail', catalog_id=catalog.id) }}">
+    <div class="px-4 py-4 sm:px-6">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <i data-feather="folder" class="h-6 w-6 text-gray-400"></i>
+          </div>
+          <div class="ml-4 min-w-0 flex-1">
+            <p class="text-sm font-medium text-indigo-600 dark:text-indigo-400 truncate">
+              {{ catalog.title or 'Untitled Catalog' }}
+            </p>
+            <p class="text-sm text-gray-500 dark:text-gray-400">
+              {{ catalog.total_lots }} lots
+              {% if catalog.auction_date %}
+              • Auction: {{ catalog.auction_date.strftime('%b %d, %Y') }}
+              {% endif %}
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-2">
+          {% if catalog.last_scraped %}
+          <span class="text-xs text-gray-500 dark:text-gray-400">
+            Updated {{ catalog.last_scraped.strftime('%b %d, %Y') }}
+          </span>
+          {% endif %}
+
+          {# EDIT: stop row navigation #}
+          <a href="{{ url_for('edit_catalog', catalog_id=catalog.id) }}"
+             class="text-gray-600 hover:text-gray-500"
+             onclick="event.stopPropagation();">
+            <i data-feather="edit-3" class="h-4 w-4"></i>
+          </a>
+
+          {# DELETE: stop row navigation #}
+          <form method="POST"
+                action="{{ url_for('delete_catalog', catalog_id=catalog.id) }}"
+                class="inline"
+                onclick="event.stopPropagation();"
+                data-confirm="Delete this catalog? This will remove all associated lots.">
+            <button type="submit"
+                    class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+              <i data-feather="trash-2" class="h-4 w-4"></i>
+            </button>
+          </form>
+
+          <i data-feather="chevron-right" class="h-5 w-5 text-gray-400"></i>
+        </div>
+      </div>
+
+      <!-- URL Preview -->
+      <div class="mt-2">
+        <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
+          {{ catalog.url }}
+        </p>
+      </div>
+    </div>
+  </div>
+</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center bg-white dark:bg-gray-800 shadow rounded-lg py-12">
+        <i data-feather="eye" class="mx-auto h-12 w-12 text-gray-400"></i>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No watchlist items</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            Start monitoring auctions by adding a HiBid catalog URL and lot numbers above.
+        </p>
+        <div class="mt-6">
+            <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md p-4 text-left max-w-md mx-auto">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <i data-feather="info" class="h-5 w-5 text-blue-400"></i>
+                    </div>
+                    <div class="ml-3">
+                        <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200">How it works</h3>
+                        <div class="mt-2 text-sm text-blue-700 dark:text-blue-300">
+                            <ul class="list-disc list-inside space-y-1">
+                                <li>Monitor current bids on auction lots</li>
+                                <li>Calculate total costs with fees and taxes</li>
+                                <li>Import winning lots to your inventory</li>
+                                <li>Bulk operations for managing multiple lots</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const form = document.getElementById('add-catalog-form');
+    if (form) {
+        form.addEventListener('submit', function() {
+            document.getElementById('loading-modal').classList.remove('hidden');
+        });
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.catalog-row').forEach(row => {
+            row.addEventListener('click', e => {
+                if (e.target.closest('a, button, form, input, label')) return;
+                window.location = row.dataset.url;
+            });
+        });
+    });
+</script>
+<script>
+  // existing loading-modal code …
+
+  // Full-row navigation without nesting anchors
+  document.querySelectorAll('[data-href]').forEach(el => {
+    el.addEventListener('click', (e) => {
+      // Ignore clicks that originated from links/buttons/forms inside
+      const tag = e.target.closest('a, button, form, input, textarea, select, label');
+      if (tag) return;
+      window.location.href = el.getAttribute('data-href');
+    });
+  });
+</script>
+{% endblock %}

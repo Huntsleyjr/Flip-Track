@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Backend - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <a href="{{ url_for('settings') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Main</a>
+            <a href="{{ url_for('settings_appearance') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Appearance</a>
+            <a href="{{ url_for('settings_users') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Users</a>
+            <a href="{{ url_for('settings_backend') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">Backend</a>
+        </nav>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <i data-feather="server" class="inline h-5 w-5 mr-2"></i>
+                SMTP Settings
+            </h3>
+            <form method="POST" class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Host</label>
+                        <input type="text" name="smtp_host" value="{{ smtp_host }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Port</label>
+                        <input type="text" name="smtp_port" value="{{ smtp_port }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                        <input type="text" name="smtp_username" value="{{ smtp_username }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                        <input type="password" name="smtp_password" value="{{ smtp_password }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">From Email</label>
+                        <input type="email" name="smtp_from_email" value="{{ smtp_from_email }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <label class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                            <input type="checkbox" name="smtp_use_tls" {% if smtp_use_tls %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2">Use TLS</span>
+                        </label>
+                        <label class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                            <input type="checkbox" name="smtp_use_ssl" {% if smtp_use_ssl %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2">Use SSL</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="mt-6">
+                    <h4 class="text-md font-medium text-gray-900 dark:text-white mb-2">Email Templates</h4>
+
+                    <div class="mb-6">
+                        <label class="flex items-center text-sm text-gray-700 dark:text-gray-300 mb-2">
+                            <input type="checkbox" name="email_send_password_reset" {% if email_send_password_reset %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2">Send password reset emails</span>
+                        </label>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
+                                <input type="text" name="email_template_password_reset_subject" value="{{ email_template_password_reset_subject }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Body</label>
+                                <textarea name="email_template_password_reset_body" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm" rows="3">{{ email_template_password_reset_body }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use {username} and {link} placeholders.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="flex items-center text-sm text-gray-700 dark:text-gray-300 mb-2">
+                            <input type="checkbox" name="email_send_email_change" {% if email_send_email_change %}checked{% endif %} class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                            <span class="ml-2">Send email change confirmations</span>
+                        </label>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Subject</label>
+                                <input type="text" name="email_template_email_change_subject" value="{{ email_template_email_change_subject }}" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Body</label>
+                                <textarea name="email_template_email_change_body" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm" rows="3">{{ email_template_email_change_body }}</textarea>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use {username}, {new_email} and {link} placeholders.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Save Settings
+                    </button>
+                </div>
+            </form>
+
+            <div class="mt-8">
+                <h4 class="text-md font-medium text-gray-900 dark:text-white mb-2">Test SMTP Settings</h4>
+                <form method="POST" action="{{ url_for('settings_backend_test') }}" class="flex flex-col sm:flex-row sm:items-center sm:space-x-4 space-y-4 sm:space-y-0">
+                    <input type="email" name="test_email" placeholder="Test email address" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Send Test Email</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

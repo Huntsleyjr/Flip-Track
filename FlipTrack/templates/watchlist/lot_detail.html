@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Lot {{ lot.lot_number }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('catalog_detail', catalog_id=lot.catalog_id) }}" 
+                   class="text-gray-400 hover:text-gray-500">
+                    <i data-feather="arrow-left" class="h-5 w-5"></i>
+                </a>
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        Lot {{ lot.lot_number }}
+                    </h1>
+                    <h2 class="mt-1 text-lg text-gray-600 dark:text-gray-300">
+                        {{ lot.title or 'Untitled Lot' }}
+                    </h2>
+                </div>
+                <div class="flex space-x-2">
+                    {% if lot.url %}
+                    <a href="{{ lot.url }}" target="_blank"
+                       class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i data-feather="external-link" class="h-4 w-4 mr-2"></i>
+                        View on HiBid
+                    </a>
+                    {% endif %}
+                    <button type="button"
+                            data-action-url="{{ url_for('import_lot', lot_id=lot.id) }}"
+                            data-total-cost="{{ '%.2f'|format(cents_to_dollars(lot.total_cost)) }}"
+                            class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            onclick="openImportModal(this)">
+                        <i data-feather="download" class="h-4 w-4 mr-2"></i>
+                        Import to Inventory
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Images -->
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+            <div class="px-4 py-5 sm:p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="camera" class="inline h-5 w-5 mr-2"></i>
+                    Photos
+                </h3>
+                
+                {% if lot.images %}
+                <div class="image-gallery">
+                    <!-- Main Image Display -->
+                    <div class="mb-4">
+                        <img id="main-image" 
+                             src="{{ lot.images[0] }}" 
+                             alt="Lot {{ lot.lot_number }}"
+                             class="w-full h-64 object-cover rounded-lg cursor-pointer"
+                             onclick="openImageViewer('{{ lot.images[0] }}')">
+                    </div>
+                    
+                    <!-- Thumbnail Strip -->
+                    {% if lot.images|length > 1 %}
+                    <div class="grid grid-cols-4 gap-2">
+                        {% for image_url in lot.images %}
+                        <img src="{{ image_url }}" 
+                             alt="Lot {{ lot.lot_number }}"
+                             class="h-16 w-full object-cover rounded cursor-pointer border-2 {% if loop.index == 1 %}border-indigo-500{% else %}border-transparent hover:border-gray-300{% endif %}"
+                             onclick="setMainImage('{{ image_url }}', this)">
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <i data-feather="camera" class="mx-auto h-12 w-12 text-gray-400"></i>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">No photos available</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Bidding & Cost Information -->
+        <div class="space-y-6">
+            <!-- Current Bid Info -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                        <i data-feather="trending-up" class="inline h-5 w-5 mr-2"></i>
+                        Bidding Information
+                    </h3>
+                    
+                    <dl class="space-y-3">
+                        <div class="flex justify-between">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Current Bid</dt>
+                            <dd class="text-lg font-bold text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(lot.current_bid)) }}</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Buyer's Premium</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ "%.1f"|format(lot.effective_buyer_premium) }}%</dd>
+                        </div>
+                        <div class="flex justify-between">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Tax Rate</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">{{ "%.1f"|format(lot.effective_tax_rate) }}%</dd>
+                        </div>
+                        {% if lot.shipping_cost > 0 %}
+                        <div class="flex justify-between">
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Shipping</dt>
+                            <dd class="text-sm text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(lot.shipping_cost)) }}</dd>
+                        </div>
+                        {% endif %}
+                        <div class="border-t border-gray-200 dark:border-gray-600 pt-3">
+                            <div class="flex justify-between">
+                                <dt class="text-base font-medium text-gray-900 dark:text-white">Total Cost</dt>
+                                <dd class="text-xl font-bold text-green-600 dark:text-green-400">${{ "%.2f"|format(cents_to_dollars(lot.total_cost)) }}</dd>
+                            </div>
+                        </div>
+                        {% if lot.last_checked %}
+                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                            Last updated: {{ lot.last_checked.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+                        {% endif %}
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Edit Overrides -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+                <div class="px-4 py-5 sm:p-6">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                        <i data-feather="edit-2" class="inline h-5 w-5 mr-2"></i>
+                        Customize Values
+                    </h3>
+                    
+                    <form method="POST" action="{{ url_for('edit_lot', lot_id=lot.id) }}" id="lot-edit-form" enctype="multipart/form-data">
+                        <div class="space-y-4">
+                            <div>
+                                <label for="current_bid" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Override Current Bid</label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    <input type="number" name="current_bid" step="0.01" min="0"
+                                           value="{{ '%.2f'|format(cents_to_dollars(lot.current_bid)) }}"
+                                           class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                           placeholder="0.00">
+                                </div>
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Override the current bid for calculations</p>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label for="buyer_premium" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Buyer's Premium (%)</label>
+                                    <input type="number" name="buyer_premium" step="0.1" min="0" max="50"
+                                           value="{% if lot.buyer_premium is not none %}{{ lot.buyer_premium }}{% endif %}"
+                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                           placeholder="{{ lot.effective_buyer_premium }}">
+                                </div>
+                                
+                                <div>
+                                    <label for="tax_rate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tax Rate (%)</label>
+                                    <input type="number" name="tax_rate" step="0.1" min="0" max="25"
+                                           value="{% if lot.tax_rate is not none %}{{ lot.tax_rate }}{% endif %}"
+                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                           placeholder="{{ lot.effective_tax_rate }}">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="shipping_cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Shipping Cost</label>
+                                <div class="mt-1 relative rounded-md shadow-sm">
+                                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <span class="text-gray-500 sm:text-sm">$</span>
+                                    </div>
+                                    <input type="number" name="shipping_cost" step="0.01" min="0"
+                                           value="{{ '%.2f'|format(cents_to_dollars(lot.shipping_cost)) }}"
+                                           class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                           placeholder="0.00">
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label for="notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Notes</label>
+                                <textarea name="notes" rows="3"
+                                          class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                                          placeholder="Personal notes about this lot">{{ lot.notes }}</textarea>
+                            </div>
+
+                            <div>
+                                <label for="images" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Add Photos</label>
+                                <input type="file" name="images" id="images" multiple
+                                       class="mt-1 block w-full text-sm text-gray-500 dark:text-gray-400">
+                            </div>
+
+                            <button type="submit"
+                                    class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                                <i data-feather="save" class="h-4 w-4 mr-2"></i>
+                                Update Lot
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    {% if lot.description %}
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <i data-feather="file-text" class="inline h-5 w-5 mr-2"></i>
+                Description
+            </h3>
+            <div class="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                {{ lot.description }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Image Viewer Modal -->
+<div id="image-viewer" class="fixed inset-0 bg-black bg-opacity-75 hidden z-50" onclick="closeImageViewer()">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="relative max-w-4xl max-h-full">
+            <img id="viewer-image" src="" alt="" class="max-w-full max-h-full object-contain">
+            <button onclick="closeImageViewer()"
+                    class="absolute top-4 right-4 text-white hover:text-gray-300">
+                <i data-feather="x" class="h-8 w-8"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Import Modal -->
+<div id="import-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden z-50 flex items-center justify-center">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+        <form id="import-form" method="POST">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Confirm Import</h3>
+            <div class="space-y-4">
+                <div>
+                    <label for="import-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Purchase Date</label>
+                    <input type="date" id="import-date" name="purchase_date" class="mt-1 block w-full border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white">
+                </div>
+                <div>
+                    <label for="import-cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Final Cost</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <span class="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input type="number" step="0.01" min="0" id="import-cost" name="purchase_price" class="block w-full pl-7 pr-12 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <input id="import-delete" type="checkbox" name="delete_lot" class="h-4 w-4 text-red-600">
+                    <label for="import-delete" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Remove from catalog</label>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="closeImportModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Import</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gallery.js') }}"></script>
+<script src="{{ url_for('static', filename='js/viewer.js') }}"></script>
+<script>
+function openImportModal(btn) {
+    const modal = document.getElementById('import-modal');
+    const form = document.getElementById('import-form');
+    form.action = btn.dataset.actionUrl;
+    document.getElementById('import-date').value = new Date().toISOString().split('T')[0];
+    document.getElementById('import-cost').value = btn.dataset.totalCost;
+    document.getElementById('import-delete').checked = false;
+    modal.classList.remove('hidden');
+}
+function closeImportModal() {
+    document.getElementById('import-modal').classList.add('hidden');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Appearance - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Tabs -->
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <a href="{{ url_for('settings') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Main</a>
+            <a href="{{ url_for('settings_appearance') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm border-indigo-500 text-indigo-600">Appearance</a>
+            <a href="{{ url_for('settings_users') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Users</a>
+            <a href="{{ url_for('settings_backend') }}" class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm text-gray-500 dark:text-gray-300 border-transparent hover:text-gray-700 hover:border-gray-300">Backend</a>
+        </nav>
+    </div>
+
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <i data-feather="monitor" class="inline h-5 w-5 mr-2"></i>
+                Appearance
+            </h3>
+            <form method="POST" class="space-y-4">
+                <div>
+                    <label for="theme" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Theme</label>
+                    <select name="theme" id="theme" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        <option value="system" {% if theme == 'system' %}selected{% endif %}>System Default</option>
+                        <option value="light" {% if theme == 'light' %}selected{% endif %}>Light Mode</option>
+                        <option value="dark" {% if theme == 'dark' %}selected{% endif %}>Dark Mode</option>
+                    </select>
+                    <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        Choose your preferred color theme. System default will match your device settings.
+                    </p>
+                </div>
+                <div>
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Save Appearance</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

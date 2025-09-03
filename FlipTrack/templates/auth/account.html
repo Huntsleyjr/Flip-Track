@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-white">
+                <i data-feather="user" class="inline h-5 w-5 mr-2"></i>
+                Account Settings
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                Manage your account information and security settings.
+            </p>
+        </div>
+    </div>
+
+    <!-- Change Username -->
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Change Username</h4>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="change_username">
+                <div>
+                    <label for="new_username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Username</label>
+                    <input id="new_username" name="new_username" type="text" value="{{ current_user.username }}" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+                <button type="submit"
+                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Update Username
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Email -->
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Change Email</h4>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="change_email">
+                <div>
+                    <label for="new_email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Email</label>
+                    <input id="new_email" name="new_email" type="email" value="{{ current_user.email }}" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">A confirmation link will be sent to the new address.</p>
+                <button type="submit"
+                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Update Email
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Change Password</h4>
+            <form method="POST" class="space-y-4">
+                <input type="hidden" name="action" value="change_password">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                        <label for="current_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Password</label>
+                        <input id="current_password" name="current_password" type="password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="new_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">New Password</label>
+                        <input id="new_password" name="new_password" type="password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div>
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password</label>
+                        <input id="confirm_password" name="confirm_password" type="password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                </div>
+                <button type="submit"
+                        class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Update Password
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Device Management -->
+    <div class="mt-6 bg-white dark:bg-gray-800 shadow rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h4 class="text-md font-medium text-gray-900 dark:text-white mb-4">Device Management</h4>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                If you selected "Remember me" when logging in, you can forget this device to require login next time.
+            </p>
+            <form method="POST">
+                <input type="hidden" name="action" value="forget_device">
+                <button type="submit"
+                        class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i data-feather="smartphone" class="h-4 w-4 mr-2"></i>
+                    Forget This Device
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

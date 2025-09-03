@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - {{ super() }}{% endblock %}
+
+{% block content %}
+{% macro item_card(item, show_mark_sold=False) %}
+<div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden cursor-pointer item-card" data-url="{{ url_for('items.item_detail', item_id=item.id) }}">
+    <div class="aspect-w-16 aspect-h-9 bg-gray-200 dark:bg-gray-700">
+        {% if item.thumbnail %}
+        <img src="{{ url_for('uploaded_file', filename=item.thumbnail.filename) }}" alt="{{ item.name }}" class="w-full h-48 object-cover">
+        {% elif item.images %}
+        <img src="{{ url_for('uploaded_file', filename=item.images[0].filename) }}" alt="{{ item.name }}" class="w-full h-48 object-cover">
+        {% else %}
+        <div class="w-full h-48 flex items-center justify-center">
+            <i data-feather="image" class="h-12 w-12 text-gray-400"></i>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="p-4">
+        <div class="flex items-center justify-between mb-2">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white truncate">{{ item.name }}</h3>
+            {% if item.status == 'sold' %}
+            <span class="status-badge sold">
+                <i data-feather="check-circle" class="h-3 w-3 mr-1"></i>
+                Sold
+            </span>
+            {% elif item.status == 'listed' %}
+            <span class="status-badge listed">
+                <i data-feather="tag" class="h-3 w-3 mr-1"></i>
+                Listed
+            </span>
+            {% elif item.status == 'in_repair' %}
+            <span class="status-badge in-repair">
+                <i data-feather="tool" class="h-3 w-3 mr-1"></i>
+                In Repair
+            </span>
+            {% else %}
+            <span class="status-badge active">
+                <i data-feather="clock" class="h-3 w-3 mr-1"></i>
+                Active
+            </span>
+            {% endif %}
+        </div>
+
+            <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+            <div>Purchased: {{ item.purchase_date.strftime('%b %d, %Y') }}</div>
+            <div>Purchase Price: ${{ "%.2f"|format(cents_to_dollars(item.purchase_price)) }}</div>
+            <div>Total Cost: ${{ "%.2f"|format(cents_to_dollars(item.total_costs)) }}</div>
+            {% if item.is_sold %}
+            <div>Sale Price: ${{ "%.2f"|format(cents_to_dollars(item.sale_price)) }}</div>
+            <div class="{% if item.profit > 0 %}text-green-600 dark:text-green-400{% elif item.profit < 0 %}text-red-600 dark:text-red-400{% else %}text-gray-600 dark:text-gray-400{% endif %}">
+                Profit: ${{ "%.2f"|format(cents_to_dollars(item.profit)) }} {% if item.roi %}({{ "%.1f"|format(item.roi) }}%){% endif %}
+            </div>
+            {% elif item.expected_sale_price and dashboard_show_projections %}
+            <div>Expected Price: ${{ "%.2f"|format(cents_to_dollars(item.expected_sale_price)) }}</div>
+            <div class="{% if item.potential_profit > 0 %}text-green-600 dark:text-green-400{% elif item.potential_profit < 0 %}text-red-600 dark:text-red-400{% else %}text-gray-600 dark:text-gray-400{% endif %}">
+                Potential Profit: ${{ "%.2f"|format(cents_to_dollars(item.potential_profit)) }} {% if item.potential_roi %}({{ "%.1f"|format(item.potential_roi) }}%){% endif %}
+            </div>
+            {% endif %}
+            </div>
+
+        <div class="mt-4 flex justify-between items-center">
+            <a href="{{ url_for('items.item_detail', item_id=item.id) }}" class="text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 text-sm font-medium">View Details</a>
+            <div class="flex items-center space-x-2">
+                {% if show_mark_sold %}
+                <button type="button" data-action="{{ url_for('items.item_mark_sold', item_id=item.id) }}" data-expected="{% if item.expected_sale_price is not none %}{{ '%.2f'|format(cents_to_dollars(item.expected_sale_price)) }}{% endif %}" data-costs="{{ item.total_costs }}" class="open-mark-sold text-green-600 hover:text-green-500 dark:text-green-400 text-sm">Mark as Sold</button>
+                {% endif %}
+                <a href="{{ url_for('items.item_edit', item_id=item.id) }}" class="text-gray-600 hover:text-gray-500 dark:text-gray-400 text-sm"><i data-feather="edit-2" class="h-4 w-4"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endmacro %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header with Search and Add Item -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl font-bold leading-7 text-gray-900 dark:text-white sm:truncate">
+                        <i data-feather="package" class="inline h-6 w-6 mr-2"></i>
+                        Inventory Dashboard
+                    </h1>
+                </div>
+                <div class="mt-4 responsive-button-group flex-col sm:flex-row sm:mt-0 sm:ml-4">
+                    <form method="POST" enctype="multipart/form-data" action="{{ url_for('import_items') }}" class="inline">
+                        <label for="import-file" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 cursor-pointer">
+                            <i data-feather="upload" class="h-4 w-4 mr-2"></i>
+                            Import
+                        </label>
+                        <input id="import-file" name="file" type="file" accept=".zip" class="sr-only" onchange="this.form.submit()">
+                    </form>
+                    <a href="{{ url_for('items.item_new') }}"
+                       class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i data-feather="plus" class="h-4 w-4 mr-2"></i>
+                        Add Item
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Search and Filters -->
+            <div class="mt-6 flex flex-col sm:flex-row gap-4">
+                <form method="GET" class="flex-1">
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-feather="search" class="h-5 w-5 text-gray-400"></i>
+                        </div>
+                        <input type="text" name="search" value="{{ search_query }}"
+                               placeholder="Search items by name or notes..."
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 dark:text-white text-sm">
+                    </div>
+                    <input type="hidden" name="sort" value="{{ sort_by }}">
+                    <input type="hidden" name="category" value="{{ category_filter }}">
+                </form>
+
+                <form method="GET" class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+                    <input type="hidden" name="search" value="{{ search_query }}">
+                    <label for="category" class="text-sm font-medium text-gray-700 dark:text-gray-300">Category:</label>
+                    <select name="category" id="category" onchange="this.form.submit()"
+                            class="block w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:text-white text-sm">
+                        <option value="" {% if not category_filter %}selected{% endif %}>All</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if category_filter == category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="sort" class="text-sm font-medium text-gray-700 dark:text-gray-300">Sort:</label>
+                    <select name="sort" id="sort" onchange="this.form.submit()"
+                            class="block w-full sm:w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:text-white text-sm">
+                        <option value="newest" {% if sort_by == 'newest' %}selected{% endif %}>Newest First</option>
+                        <option value="oldest" {% if sort_by == 'oldest' %}selected{% endif %}>Oldest First</option>
+                        <option value="profit_high" {% if sort_by == 'profit_high' %}selected{% endif %}>Profit High-Low</option>
+                        <option value="profit_low" {% if sort_by == 'profit_low' %}selected{% endif %}>Profit Low-High</option>
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-{{ 5 if dashboard_show_projections else 4 }} mb-6">
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="box" class="h-6 w-6 text-gray-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Active Inventory Value</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(active_inventory_value)) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="trending-up" class="h-6 w-6 text-green-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Items Sold</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white">{{ sold_count }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="credit-card" class="h-6 w-6 text-red-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Asset Purchases</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(total_assets_cost)) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="dollar-sign" class="h-6 w-6 text-green-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Profit</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(total_profit)) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if dashboard_show_projections %}
+        <div class="bg-white dark:bg-gray-800 overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i data-feather="trending-up" class="h-6 w-6 text-purple-400"></i>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400 truncate">Potential Profit</dt>
+                            <dd class="text-lg font-medium text-gray-900 dark:text-white">${{ "%.2f"|format(cents_to_dollars(potential_profit_total)) }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Active Items -->
+    {% if active_items %}
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for item in active_items %}
+            {{ item_card(item, True) }}
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center bg-white dark:bg-gray-800 shadow rounded-lg py-12">
+        <i data-feather="package" class="mx-auto h-12 w-12 text-gray-400"></i>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No active items</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            {% if search_query %}
+            No items match your search criteria.
+            {% else %}
+            Get started by adding your first inventory item.
+            {% endif %}
+        </p>
+        {% if not search_query %}
+        <div class="mt-6">
+            <a href="{{ url_for('items.item_new') }}" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <i data-feather="plus" class="h-4 w-4 mr-2"></i>
+                Add Item
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if sold_items %}
+    <div class="mt-12">
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Sold Items</h2>
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {% for item in sold_items %}
+                {{ item_card(item) }}
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if pagination.pages > 1 %}
+    <div class="mt-8 flex justify-center space-x-4">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('dashboard', page=pagination.prev_num, search=search_query, sort=sort_by) }}"
+           class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300">Previous</a>
+        {% endif %}
+        {% if pagination.has_next %}
+        <a href="{{ url_for('dashboard', page=pagination.next_num, search=search_query, sort=sort_by) }}"
+           class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-300">Next</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div id="mark-sold-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-sm">
+        <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Mark as Sold</h3>
+        <form id="mark-sold-form" method="POST">
+            <div class="mb-4">
+                <label for="modal-expected-price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Expected Sale Price</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input type="number" step="0.01" min="0" id="modal-expected-price" name="expected_sale_price" class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label for="modal-sale-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sale Date</label>
+                <input type="date" id="modal-sale-date" name="sale_date" class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+            </div>
+            <div class="mb-4">
+                <label for="modal-sale-price" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Sale Price</label>
+                <div class="mt-1 relative rounded-md shadow-sm">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input type="number" step="0.01" min="0" id="modal-sale-price" name="sale_price" class="block w-full pl-7 pr-12 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+            </div>
+            {% if dashboard_show_projections %}
+            <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                Potential Profit: <span id="modal-potential-profit">$0.00</span> (<span id="modal-potential-roi">0.0%</span>)
+            </div>
+            {% endif %}
+            <div class="flex justify-end space-x-2">
+                <button type="button" class="close-mark-sold px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-gray-700 dark:text-gray-300">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('mark-sold-modal');
+    const form = document.getElementById('mark-sold-form');
+    const openButtons = document.querySelectorAll('.open-mark-sold');
+    const closeButtons = document.querySelectorAll('.close-mark-sold');
+    const expectedInput = document.getElementById('modal-expected-price');
+    const potentialProfitEl = document.getElementById('modal-potential-profit');
+    const potentialRoiEl = document.getElementById('modal-potential-roi');
+
+    function updateProjections() {
+        if (!potentialProfitEl || !potentialRoiEl) return;
+        const expected = parseFloat(expectedInput.value || '0');
+        const costs = parseInt(form.dataset.costs || '0');
+        const profitCents = Math.round(expected * 100) - costs;
+        potentialProfitEl.textContent = `$${(profitCents / 100).toFixed(2)}`;
+        potentialRoiEl.textContent = costs ? `${(profitCents / costs * 100).toFixed(1)}%` : '0.0%';
+    }
+
+    if (potentialProfitEl && potentialRoiEl) {
+        expectedInput.addEventListener('input', updateProjections);
+    }
+
+    openButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            form.action = btn.dataset.action;
+            form.dataset.costs = btn.dataset.costs || '0';
+            expectedInput.value = btn.dataset.expected || '';
+            if (potentialProfitEl && potentialRoiEl) { updateProjections(); }
+            modal.classList.remove('hidden');
+        });
+    });
+
+        closeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modal.classList.add('hidden');
+                form.reset();
+                form.action = '';
+                form.dataset.costs = '0';
+                potentialProfitEl.textContent = '$0.00';
+                potentialRoiEl.textContent = '0.0%';
+            });
+        });
+
+    const itemCards = document.querySelectorAll('.item-card');
+    itemCards.forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (e.target.closest('a, button')) {
+                return;
+            }
+            window.location = card.dataset.url;
+        });
+    });
+});
+</script>
+{% endblock %}

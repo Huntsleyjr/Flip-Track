@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Setup - Company Information - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div class="text-center">
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">Setup Your Company</h2>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 1 of 3: Company Information</p>
+        </div>
+        
+        <form class="mt-8 space-y-6" method="POST" enctype="multipart/form-data">
+            <div class="space-y-4">
+                <div>
+                    <label for="company_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Company Name *</label>
+                    <input id="company_name" name="company_name" type="text" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white sm:text-sm"
+                           placeholder="Your Company Name">
+                </div>
+                
+                <div>
+                    <label for="logo" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Company Logo (Optional)</label>
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-md">
+                        <div class="space-y-1 text-center">
+                            <i data-feather="upload" class="mx-auto h-12 w-12 text-gray-400"></i>
+                            <div class="flex text-sm text-gray-600 dark:text-gray-400">
+                                <label for="logo" class="relative cursor-pointer bg-white dark:bg-gray-800 rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                    <span>Upload a logo</span>
+                                    <input id="logo" name="logo" type="file" accept="image/*" class="sr-only">
+                                </label>
+                                <p class="pl-1">or drag and drop</p>
+                            </div>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">PNG, JPG, HEIC up to 10MB</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <div></div>
+                <button type="submit"
+                        class="group relative flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Next Step
+                    <i data-feather="arrow-right" class="ml-2 h-4 w-4"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // File upload preview
+    document.getElementById('logo').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.createElement('img');
+                preview.src = e.target.result;
+                preview.className = 'h-12 w-12 rounded-full mx-auto mb-2';
+                
+                const uploadArea = e.target.parentElement.parentElement.parentElement;
+                uploadArea.innerHTML = '';
+                uploadArea.appendChild(preview);
+                
+                const fileName = document.createElement('p');
+                fileName.textContent = file.name;
+                fileName.className = 'text-sm text-gray-600 dark:text-gray-400';
+                uploadArea.appendChild(fileName);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

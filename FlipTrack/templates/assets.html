@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Assets - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+                <i data-feather="credit-card" class="inline h-6 w-6 mr-2"></i>
+                Assets
+            </h1>
+            <form method="POST" class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+                <input type="text" name="description" required placeholder="Description"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <input type="number" step="0.01" min="0" name="amount" required placeholder="Amount"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <input type="text" name="category" placeholder="Category"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <input type="date" name="date"
+                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                <div class="md:col-span-5 flex justify-end">
+                    <button type="submit"
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Add Asset
+                    </button>
+                </div>
+            </form>
+            {% if assets %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-300 dark:divide-gray-600">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
+                        {% for asset in assets %}
+                        <tr>
+                            <form method="POST" action="{{ url_for('edit_asset', asset_id=asset.id) }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <input type="text" name="description" value="{{ asset.description }}" required class="w-full bg-transparent">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <input type="number" step="0.01" min="0" name="amount" value="{{ '%.2f'|format(cents_to_dollars(asset.amount)) }}" class="w-32 bg-transparent">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <input type="text" name="category" value="{{ asset.category or '' }}" class="w-32 bg-transparent">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <input type="date" name="date" value="{{ asset.date.isoformat() }}" class="bg-transparent">
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <div class="flex space-x-2">
+                                    <button type="submit" class="text-indigo-600 hover:text-indigo-500">Save</button>
+                            </form>
+                                    <form method="POST" action="{{ url_for('transfer_asset', asset_id=asset.id) }}" data-confirm="Transfer this asset to inventory?">
+                                        <button type="submit" class="text-green-600 hover:text-green-500">Transfer</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('delete_asset', asset_id=asset.id) }}" data-confirm="Delete this asset?">
+                                        <button type="submit" class="text-red-600 hover:text-red-500">Delete</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-sm text-gray-500 dark:text-gray-400">No assets added yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Setup - Create Users - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-2xl w-full space-y-8">
+        <div class="text-center">
+            <h2 class="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">Create User Accounts</h2>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Step 2 of 3: Set up admin and user accounts</p>
+        </div>
+        
+        <form class="mt-8 space-y-6" method="POST">
+            <!-- Admin User -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                    <i data-feather="shield" class="inline h-5 w-5 mr-2"></i>
+                    Administrator Account
+                </h3>
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username *</label>
+                        <input id="username" name="username" type="text" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="admin">
+                    </div>
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email *</label>
+                        <input id="email" name="email" type="email" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="admin@example.com">
+                    </div>
+                    <div>
+                        <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password *</label>
+                        <input id="password" name="password" type="password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label for="confirm_password" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Confirm Password *</label>
+                        <input id="confirm_password" name="confirm_password" type="password" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Users -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 dark:text-white">
+                        <i data-feather="users" class="inline h-5 w-5 mr-2"></i>
+                        Additional Users (Optional)
+                    </h3>
+                    <button type="button" id="add-user" class="text-indigo-600 hover:text-indigo-500 text-sm font-medium">
+                        <i data-feather="plus" class="inline h-4 w-4 mr-1"></i>
+                        Add User
+                    </button>
+                </div>
+                <div id="additional-users" class="space-y-4">
+                    <!-- Additional users will be added here -->
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <a href="{{ url_for('onboarding.onboarding_step1') }}"
+                   class="group relative flex justify-center py-2 px-4 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    <i data-feather="arrow-left" class="mr-2 h-4 w-4"></i>
+                    Previous
+                </a>
+                <button type="submit"
+                        class="group relative flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Next Step
+                    <i data-feather="arrow-right" class="ml-2 h-4 w-4"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let userCounter = 1;
+
+    document.getElementById('add-user').addEventListener('click', function() {
+        const container = document.getElementById('additional-users');
+        const userDiv = document.createElement('div');
+        userDiv.className = 'border border-gray-200 dark:border-gray-600 rounded-lg p-4';
+        userDiv.innerHTML = `
+            <div class="flex items-center justify-between mb-3">
+                <h4 class="text-sm font-medium text-gray-900 dark:text-white">User ${userCounter}</h4>
+                <button type="button" class="text-red-600 hover:text-red-500" onclick="this.parentElement.parentElement.remove()">
+                    <i data-feather="trash-2" class="h-4 w-4"></i>
+                </button>
+            </div>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Username</label>
+                    <input name="additional_username_${userCounter}" type="text"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                    <input name="additional_email_${userCounter}" type="email"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Password</label>
+                    <input name="additional_password_${userCounter}" type="password"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                </div>
+                <div class="flex items-center">
+                    <input name="additional_is_admin_${userCounter}" type="checkbox" class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded">
+                    <label class="ml-2 text-sm text-gray-700 dark:text-gray-300">Admin</label>
+                </div>
+            </div>
+        `;
+        container.appendChild(userDiv);
+        userCounter++;
+        feather.replace();
+    });
+</script>
+{% endblock %}

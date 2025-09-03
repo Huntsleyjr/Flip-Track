@@ -1,0 +1,468 @@
+{% extends "base.html" %}
+
+{% block title %}{{ catalog.title or 'Catalog' }} - {{ super() }}{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+    <!-- Header -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <div class="flex items-center space-x-3">
+                <a href="{{ url_for('watchlist_catalogs') }}"
+                   class="text-gray-400 hover:text-gray-500">
+                    <i data-feather="arrow-left" class="h-5 w-5"></i>
+                </a>
+                <div class="flex-1 min-w-0">
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">{{ catalog.title or 'Untitled Catalog' }}</h1>
+                    <div class="mt-1 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+                        <span>{{ catalog.total_lots }} lots</span>
+                        {% if catalog.auction_date %}
+                        <span>• Auction: {{ catalog.auction_date.strftime('%B %d, %Y') }}</span>
+                        {% endif %}
+                        {% if catalog.last_scraped %}
+                        <span>• Last updated: {{ catalog.last_scraped.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                        {% endif %}
+                    </div>
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400 truncate">{{ catalog.url }}</p>
+                </div>
+                <a href="{{ url_for('edit_catalog', catalog_id=catalog.id) }}"
+                   class="text-gray-600 hover:text-gray-500">
+                    <i data-feather="edit-3" class="h-5 w-5"></i>
+                </a>
+                <form method="POST" action="{{ url_for('delete_catalog', catalog_id=catalog.id) }}" data-confirm="Delete this catalog? This will remove all associated lots.">
+                    <button type="submit"
+                            class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                        <i data-feather="trash-2" class="h-5 w-5"></i>
+                    </button>
+                </form>
+            </div>
+    </div>
+    </div>
+
+    <!-- Add Lots Form -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <i data-feather="plus" class="inline h-5 w-5 mr-2"></i>
+                Add Lots
+            </h3>
+            <form method="POST" action="{{ url_for('add_watchlist_item') }}" id="add-lots-form">
+                <input type="hidden" name="catalog_url" value="{{ catalog.url }}">
+                <div class="space-y-4 sm:space-y-0 sm:flex sm:space-x-4">
+                    <div class="flex-1">
+                        <label for="lot_numbers" class="sr-only">Lot Numbers</label>
+                        <input type="text" name="lot_numbers" id="lot_numbers"
+                               class="block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm"
+                               placeholder="Comma-separated lot numbers">
+                    </div>
+                    <button type="submit"
+                            class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        <i data-feather="plus" class="h-4 w-4 mr-2"></i>
+                        Add Lots
+                    </button>
+                </div>
+                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                    Provide comma-separated lot numbers or leave blank to import all new lots.
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Manual Lot Form Link -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">
+                <i data-feather="file-plus" class="inline h-5 w-5 mr-2"></i>
+                Add Lot Manually
+            </h3>
+            <a href="{{ url_for('manual_add_lot', catalog_id=catalog.id) }}"
+               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <i data-feather="file-plus" class="h-4 w-4 mr-2"></i>
+                New Manual Lot
+            </a>
+        </div>
+    </div>
+
+    <!-- Bulk Actions -->
+    {% if lots %}
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg mb-6">
+        <div class="px-4 py-5 sm:p-6">
+            <form method="POST" action="{{ url_for('bulk_operations') }}" id="bulk-form">
+                <input type="hidden" name="catalog_id" value="{{ catalog.id }}">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <input type="checkbox" id="select-all"
+                               class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                               onchange="toggleAllLots()">
+                        <label for="select-all" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Select All
+                        </label>
+                        <span id="selected-count" class="text-sm text-gray-500 dark:text-gray-400">0 selected</span>
+                        <span id="selected-total" class="text-sm text-gray-500 dark:text-gray-400 hidden"></span>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button type="submit" name="action" value="refresh"
+                                class="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                onclick="validateBulkAction(event, 'refresh selected lots')">
+                            <i data-feather="refresh-cw" class="h-4 w-4 mr-1"></i>
+                            Refresh
+                        </button>
+                        <button type="submit" name="action" value="import"
+                                class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <i data-feather="download" class="h-4 w-4 mr-1"></i>
+                            Import
+                        </button>
+                        <button type="submit" name="action" value="delete"
+                                class="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm leading-4 font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                                onclick="validateBulkAction(event, 'delete selected lots')">
+                            <i data-feather="trash-2" class="h-4 w-4 mr-1"></i>
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Lots Grid -->
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {% for lot in lots %}
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden cursor-pointer watchlist-lot" data-url="{{ url_for('lot_detail', lot_id=lot.id) }}">
+            <!-- Lot Selection Checkbox -->
+            <div class="p-3 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" name="lot_ids" value="{{ lot.id }}" form="bulk-form"
+                               class="lot-checkbox h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                               data-action-url="{{ url_for('import_lot', lot_id=lot.id) }}"
+                               data-total-cost="{{ '%.2f'|format(cents_to_dollars(lot.total_cost)) }}"
+                               data-lot-number="{{ lot.lot_number }}"
+                               onchange="updateSelectedCount()">
+                        <span class="text-sm font-medium text-gray-900 dark:text-white">Lot {{ lot.lot_number }}</span>
+                    </label>
+                    <div class="flex items-center space-x-2">
+                        <a href="{{ url_for('lot_detail', lot_id=lot.id) }}"
+                           class="text-indigo-600 hover:text-indigo-500 text-sm">
+                            View
+                        </a>
+                        <a href="{{ url_for('lot_detail', lot_id=lot.id) }}#lot-edit-form"
+                           class="text-gray-600 hover:text-gray-500 text-sm">
+                            Edit
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lot Image -->
+            <div class="aspect-w-16 aspect-h-9 bg-gray-200 dark:bg-gray-700">
+                {% if lot.images %}
+                <img src="{{ lot.images[0] }}" 
+                     alt="Lot {{ lot.lot_number }}" 
+                     class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 flex items-center justify-center">
+                    <i data-feather="image" class="h-12 w-12 text-gray-400"></i>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Lot Details -->
+            <div class="p-4">
+                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-2 line-clamp-2">
+                    {{ lot.title or 'Untitled Lot' }}
+                </h3>
+                
+                <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                    <div class="flex justify-between">
+                        <span>Current Bid:</span>
+                        <span class="font-medium">${{ "%.2f"|format(cents_to_dollars(lot.current_bid)) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Buyer's Premium:</span>
+                        <span>{{ "%.1f"|format(lot.effective_buyer_premium) }}%</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Tax:</span>
+                        <span>{{ "%.1f"|format(lot.effective_tax_rate) }}%</span>
+                    </div>
+                    {% if lot.shipping_cost > 0 %}
+                    <div class="flex justify-between">
+                        <span>Shipping:</span>
+                        <span>${{ "%.2f"|format(cents_to_dollars(lot.shipping_cost)) }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between font-medium text-gray-900 dark:text-white border-t border-gray-200 dark:border-gray-600 pt-1">
+                        <span>Total Cost:</span>
+                        <span>${{ "%.2f"|format(cents_to_dollars(lot.total_cost)) }}</span>
+                    </div>
+                </div>
+                
+                {% if lot.last_checked %}
+                <div class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                    Last checked: {{ lot.last_checked.strftime('%b %d, %I:%M %p') }}
+                </div>
+                {% endif %}
+                
+                <div class="mt-4 flex justify-between items-center">
+                    <button type="button"
+                            data-action-url="{{ url_for('import_lot', lot_id=lot.id) }}"
+                            data-total-cost="{{ '%.2f'|format(cents_to_dollars(lot.total_cost)) }}"
+                            class="text-green-600 hover:text-green-500 text-sm font-medium"
+                            onclick="openImportModal(this)">
+                        <i data-feather="download" class="inline h-4 w-4 mr-1"></i>
+                        Import
+                    </button>
+                    {% if lot.url %}
+                    <a href="{{ lot.url }}" target="_blank"
+                       class="text-gray-600 hover:text-gray-500 text-sm">
+                        <i data-feather="external-link" class="inline h-4 w-4 mr-1"></i>
+                        HiBid
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center bg-white dark:bg-gray-800 shadow rounded-lg py-12">
+        <i data-feather="search" class="mx-auto h-12 w-12 text-gray-400"></i>
+        <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-white">No lots found</h3>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+            This catalog doesn't have any lots yet, or they haven't been scraped.
+        </p>
+    </div>
+    {% endif %}
+</div>
+    <!-- Loading Modal -->
+    <div id="loading-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
+            <p class="text-lg font-medium text-gray-900 dark:text-white">
+                Adding lots, please wait...
+            </p>
+        </div>
+    </div>
+
+    <!-- Refresh Modal -->
+    <div id="refresh-modal" class="hidden fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 text-center">
+            <p class="text-lg font-medium text-gray-900 dark:text-white">
+                Lots refreshing, please wait...
+            </p>
+            <p id="refresh-progress" class="mt-2 text-sm text-gray-600 dark:text-gray-300"></p>
+        </div>
+    </div>
+    
+    <!-- Import Modal -->
+    <div id="import-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <form id="import-form" method="POST">
+                <p id="bulk-counter" class="text-sm text-gray-500 dark:text-gray-400 mb-2 hidden"></p>
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Confirm Import</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label for="import-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Purchase Date</label>
+                        <input type="date" id="import-date" name="purchase_date" class="mt-1 block w-full border border-gray-300 rounded-md dark:bg-gray-700 dark:text-white">
+                    </div>
+                    <div>
+                        <label for="import-cost" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Final Cost</label>
+                        <div class="mt-1 relative rounded-md shadow-sm">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <span class="text-gray-500 sm:text-sm">$</span>
+                            </div>
+                            <input type="number" step="0.01" min="0" id="import-cost" name="purchase_price" class="block w-full pl-7 pr-12 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white sm:text-sm">
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <input id="import-delete" type="checkbox" name="delete_lot" class="h-4 w-4 text-red-600">
+                        <label for="import-delete" class="ml-2 text-sm text-gray-700 dark:text-gray-300">Remove from catalog</label>
+                    </div>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" onclick="closeImportModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md">Cancel</button>
+                    <button type="submit" id="import-submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Import</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function toggleAllLots() {
+        const selectAll = document.getElementById('select-all');
+        const checkboxes = document.querySelectorAll('.lot-checkbox');
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = selectAll.checked;
+        });
+        
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.lot-checkbox:checked');
+        const count = checkboxes.length;
+        const total = document.querySelectorAll('.lot-checkbox').length;
+
+        let sum = 0;
+        checkboxes.forEach(cb => {
+            sum += parseFloat(cb.dataset.totalCost) || 0;
+        });
+
+        document.getElementById('selected-count').textContent = `${count} selected`;
+
+        const totalEl = document.getElementById('selected-total');
+        if (count > 0) {
+            totalEl.textContent = `Total: $${sum.toFixed(2)}`;
+            totalEl.classList.remove('hidden');
+        } else {
+            totalEl.textContent = '';
+            totalEl.classList.add('hidden');
+        }
+
+        document.getElementById('select-all').checked = count === total;
+        document.getElementById('select-all').indeterminate = count > 0 && count < total;
+    }
+
+    function validateBulkAction(e, action) {
+        e.preventDefault();
+        const checkboxes = document.querySelectorAll('.lot-checkbox:checked');
+        if (checkboxes.length === 0) {
+            showModal('Please select at least one lot.', { showCancel: false });
+            return;
+        }
+        showModal(`Are you sure you want to ${action}?`).then(function(ok) {
+            if (ok) {
+                const btn = e.target;
+                if (btn.form) {
+                    if (btn.value === 'refresh') {
+                        refreshSelectedLots(btn.form, checkboxes);
+                    } else {
+                        if (btn.name) {
+                            const hidden = document.createElement('input');
+                            hidden.type = 'hidden';
+                            hidden.name = btn.name;
+                            hidden.value = btn.value;
+                            btn.form.appendChild(hidden);
+                        }
+                        btn.form.submit();
+                    }
+                }
+            }
+        });
+    }
+
+    async function refreshSelectedLots(form, checkboxes) {
+        const modal = document.getElementById('refresh-modal');
+        const progress = document.getElementById('refresh-progress');
+        const catalogId = form.querySelector('input[name="catalog_id"]').value;
+        modal.classList.remove('hidden');
+        for (let i = 0; i < checkboxes.length; i++) {
+            progress.textContent = `Lot ${i + 1} of ${checkboxes.length}`;
+            const data = new FormData();
+            data.append('catalog_id', catalogId);
+            data.append('action', 'refresh');
+            data.append('lot_ids', checkboxes[i].value);
+            await fetch(form.action, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                body: data
+            });
+        }
+        modal.classList.add('hidden');
+        window.location.reload();
+    }
+
+    function openImportModal(btn) {
+        bulkLots = [];
+        const modal = document.getElementById('import-modal');
+        const form = document.getElementById('import-form');
+        form.action = btn.dataset.actionUrl;
+        document.getElementById('bulk-counter').classList.add('hidden');
+        document.getElementById('import-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('import-cost').value = btn.dataset.totalCost;
+        document.getElementById('import-delete').checked = false;
+        document.getElementById('import-submit').textContent = 'Import';
+        modal.classList.remove('hidden');
+    }
+
+    function closeImportModal() {
+        document.getElementById('import-modal').classList.add('hidden');
+        bulkLots = [];
+    }
+
+    let bulkLots = [];
+    let bulkIndex = 0;
+
+    function showBulkLot() {
+        const modal = document.getElementById('import-modal');
+        const form = document.getElementById('import-form');
+        const counter = document.getElementById('bulk-counter');
+        const lot = bulkLots[bulkIndex];
+        form.action = lot.action;
+        counter.textContent = `Importing lot ${bulkIndex + 1} of ${bulkLots.length}`;
+        counter.classList.remove('hidden');
+        document.getElementById('import-date').value = new Date().toISOString().split('T')[0];
+        document.getElementById('import-cost').value = lot.cost;
+        document.getElementById('import-delete').checked = false;
+        document.getElementById('import-submit').textContent = bulkIndex === bulkLots.length - 1 ? 'Finish' : 'Next';
+        modal.classList.remove('hidden');
+    }
+
+    document.getElementById('import-form').addEventListener('submit', async function(e) {
+        if (bulkLots.length > 0) {
+            e.preventDefault();
+            const form = e.target;
+            await fetch(form.action, {
+                method: 'POST',
+                headers: {'X-Requested-With': 'XMLHttpRequest'},
+                body: new FormData(form)
+            });
+            bulkIndex++;
+            if (bulkIndex < bulkLots.length) {
+                showBulkLot();
+            } else {
+                closeImportModal();
+                window.location.reload();
+            }
+        }
+    });
+
+    document.getElementById('bulk-form').addEventListener('submit', function(e) {
+        const action = e.submitter ? e.submitter.value : null;
+        if (action === 'import') {
+            e.preventDefault();
+            const selected = Array.from(document.querySelectorAll('.lot-checkbox:checked'));
+            if (selected.length === 0) {
+                showModal('Please select at least one lot.', { showCancel: false });
+                return;
+            }
+            bulkLots = selected.map(cb => ({action: cb.dataset.actionUrl, cost: cb.dataset.totalCost}));
+            bulkIndex = 0;
+            showBulkLot();
+        }
+    });
+
+    // Initialize count on page load
+    updateSelectedCount();
+
+    const addForm = document.getElementById('add-lots-form');
+    if (addForm) {
+        addForm.addEventListener('submit', function() {
+            document.getElementById('loading-modal').classList.remove('hidden');
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.watchlist-lot').forEach(card => {
+            card.addEventListener('click', e => {
+                if (e.target.closest('a, button, input, label')) return;
+                window.location = card.dataset.url;
+            });
+        });
+    });
+</script>
+{% endblock %}

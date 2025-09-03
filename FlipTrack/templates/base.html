@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ company_name }}{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% if favicon %}
+    <link rel="icon" href="{{ url_for('public_file', filename=favicon) }}">
+    {% endif %}
+</head>
+<body class="h-full bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <div class="min-h-full">
+        <!-- Navigation -->
+        {% if current_user.is_authenticated %}
+        <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="flex h-16 justify-between">
+                    <div class="flex">
+                        <div class="flex flex-shrink-0 items-center">
+                            {% if company_logo %}
+                            <img class="h-8 w-8 rounded-full" src="{{ url_for('public_file', filename=company_logo) }}" alt="{{ company_name }}">
+                            {% else %}
+                            <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center">
+                                <span class="text-white text-sm font-bold">{{ company_name[0] if company_name else 'I' }}</span>
+                            </div>
+                            {% endif %}
+                            <span class="ml-2 text-lg font-semibold text-gray-900 dark:text-white">{{ company_name }}</span>
+                        </div>
+                        <button id="mobile-menu-toggle" aria-controls="mobile-menu" aria-expanded="false"
+                                class="sm:hidden ml-4 inline-flex items-center justify-center p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500">
+                            <span class="sr-only">Open main menu</span>
+                            <i data-feather="menu" class="h-6 w-6"></i>
+                        </button>
+                        <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+                            <a href="{{ url_for('dashboard') }}"
+                               class="inline-flex items-center px-1 pt-1 text-sm font-medium {% if request.endpoint == 'dashboard' %}border-b-2 border-indigo-500 text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                                <i data-feather="home" class="h-4 w-4 mr-2"></i>
+                                Dashboard
+                            </a>
+                            {% if watchlist_enabled %}
+                            <a href="{{ url_for('watchlist_catalogs') }}" 
+                               class="inline-flex items-center px-1 pt-1 text-sm font-medium {% if request.endpoint.startswith('watchlist') %}border-b-2 border-indigo-500 text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                                <i data-feather="eye" class="h-4 w-4 mr-2"></i>
+                                Watchlist
+                            </a>
+                            {% endif %}
+                            <a href="{{ url_for('supplies') }}"
+                               class="inline-flex items-center px-1 pt-1 text-sm font-medium {% if request.endpoint == 'supplies' %}border-b-2 border-indigo-500 text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                                <i data-feather="archive" class="h-4 w-4 mr-2"></i>
+                                Supplies
+                            </a>
+                            <a href="{{ url_for('assets') }}"
+                               class="inline-flex items-center px-1 pt-1 text-sm font-medium {% if request.endpoint == 'assets' %}border-b-2 border-indigo-500 text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                                <i data-feather="credit-card" class="h-4 w-4 mr-2"></i>
+                                Assets
+                            </a>
+                            <a href="{{ url_for('analytics') }}"
+                               class="inline-flex items-center px-1 pt-1 text-sm font-medium {% if request.endpoint == 'analytics' %}border-b-2 border-indigo-500 text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                                <i data-feather="bar-chart-2" class="h-4 w-4 mr-2"></i>
+                                Analytics
+                            </a>
+                        </div>
+                    </div>
+                    <div class="hidden sm:ml-6 sm:flex sm:items-center space-x-4">
+                        <button id="theme-toggle" class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-gray-100">
+                            <i id="theme-toggle-sun" data-feather="sun" class="h-5 w-5 hidden dark:block"></i>
+                            <i id="theme-toggle-moon" data-feather="moon" class="h-5 w-5 block dark:hidden"></i>
+                        </button>
+                        
+                        <div class="relative ml-3">
+                            <div class="flex items-center space-x-3">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ current_user.username }}</span>
+                                <div class="relative">
+                                    <button type="button" class="group-dropdown flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                        <span class="sr-only">Open user menu</span>
+                                        <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center">
+                                            <span class="text-white text-sm font-bold">{{ current_user.username[0] }}</span>
+                                        </div>
+                                    </button>
+                                    <div class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1" id="user-menu">
+                                        <a href="{{ url_for('auth.account') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Your Account</a>
+                                        {% if current_user.is_admin %}
+                                        <a href="{{ url_for('settings') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Settings</a>
+                                        {% endif %}
+                                        <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Sign out</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center sm:hidden">
+                        <div class="relative ml-3">
+                            <button type="button" class="group-dropdown flex rounded-full bg-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2" id="mobile-user-menu-button" aria-expanded="false" aria-controls="mobile-user-menu" aria-haspopup="true">
+                                <span class="sr-only">Open user menu</span>
+                                <div class="h-8 w-8 rounded-full bg-indigo-600 flex items-center justify-center">
+                                    <span class="text-white text-sm font-bold">{{ current_user.username[0] }}</span>
+                                </div>
+                            </button>
+                            <div id="mobile-user-menu" class="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden" role="menu" aria-orientation="vertical" aria-labelledby="mobile-user-menu-button" tabindex="-1">
+                                <a href="{{ url_for('auth.account') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Your Account</a>
+                                {% if current_user.is_admin %}
+                                <a href="{{ url_for('settings') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Settings</a>
+                                {% endif %}
+                                <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700" role="menuitem">Sign out</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="mobile-menu" class="sm:hidden hidden">
+                <div class="space-y-1 px-2 pt-2 pb-3">
+                    <a href="{{ url_for('dashboard') }}" class="flex items-center px-3 py-2 rounded-md text-base font-medium {% if request.endpoint == 'dashboard' %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                        <i data-feather="home" class="h-4 w-4 mr-2"></i>
+                        Dashboard
+                    </a>
+                    {% if watchlist_enabled %}
+                    <a href="{{ url_for('watchlist_catalogs') }}" class="flex items-center px-3 py-2 rounded-md text-base font-medium {% if request.endpoint.startswith('watchlist') %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                        <i data-feather="eye" class="h-4 w-4 mr-2"></i>
+                        Watchlist
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('supplies') }}" class="flex items-center px-3 py-2 rounded-md text-base font-medium {% if request.endpoint == 'supplies' %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                        <i data-feather="archive" class="h-4 w-4 mr-2"></i>
+                        Supplies
+                    </a>
+                    <a href="{{ url_for('assets') }}" class="flex items-center px-3 py-2 rounded-md text-base font-medium {% if request.endpoint == 'assets' %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                        <i data-feather="credit-card" class="h-4 w-4 mr-2"></i>
+                        Assets
+                    </a>
+                    <a href="{{ url_for('analytics') }}" class="flex items-center px-3 py-2 rounded-md text-base font-medium {% if request.endpoint == 'analytics' %}text-gray-900 dark:text-white{% else %}text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-100{% endif %}">
+                        <i data-feather="bar-chart-2" class="h-4 w-4 mr-2"></i>
+                        Analytics
+                    </a>
+                </div>
+            </div>
+        </nav>
+        {% endif %}
+
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="fixed top-4 right-4 z-50 flex flex-col w-full max-w-sm space-y-2">
+                    {% for category, message in messages %}
+                       <div class="w-full bg-white dark:bg-gray-800 shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden">
+                            <div class="p-4">
+                                <div class="flex items-start">
+                                    <div class="flex-shrink-0">
+                                        {% if category == 'success' %}
+                                        <i data-feather="check-circle" class="h-5 w-5 text-green-400"></i>
+                                        {% elif category == 'error' %}
+                                        <i data-feather="alert-circle" class="h-5 w-5 text-red-400"></i>
+                                        {% elif category == 'warning' %}
+                                        <i data-feather="alert-triangle" class="h-5 w-5 text-yellow-400"></i>
+                                        {% else %}
+                                        <i data-feather="info" class="h-5 w-5 text-blue-400"></i>
+                                        {% endif %}
+                                    </div>
+                                    <div class="ml-3 w-0 flex-1 pt-0.5">
+                                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ message }}</p>
+                                    </div>
+                                    <div class="ml-4 flex-shrink-0 flex">
+                                        <button class="bg-white dark:bg-gray-800 rounded-md inline-flex text-gray-400 hover:text-gray-500 focus:outline-none" onclick="this.parentElement.parentElement.parentElement.parentElement.remove()">
+                                            <i data-feather="x" class="h-5 w-5"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Main content -->
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <form id="export-form" method="POST" action="{{ url_for('export_items') }}" target="_blank">
+                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Select Data to Export</h3>
+                <div class="space-y-2">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="data" value="items" class="h-4 w-4 text-indigo-600" checked>
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Items</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="data" value="supplies" class="h-4 w-4 text-indigo-600" checked>
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Supplies</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="data" value="watchlist" class="h-4 w-4 text-indigo-600" checked>
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Watchlist</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="data" value="settings" class="h-4 w-4 text-indigo-600" checked>
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Settings</span>
+                    </label>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="data" value="photos" class="h-4 w-4 text-indigo-600" checked>
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Photos</span>
+                    </label>
+                </div>
+                <div class="mt-6 flex justify-end space-x-3">
+                    <button type="button" id="export-cancel" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">Export</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="fixed inset-0 bg-gray-500 bg-opacity-75 hidden z-50 flex items-center justify-center">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <p id="confirm-message" class="text-gray-900 dark:text-white mb-4"></p>
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="confirm-cancel" class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-md">Cancel</button>
+                <button type="button" id="confirm-ok" class="px-4 py-2 bg-indigo-600 text-white rounded-md">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <script>
+        function showModal(message, options = {}) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const msgEl = document.getElementById('confirm-message');
+                const okBtn = document.getElementById('confirm-ok');
+                const cancelBtn = document.getElementById('confirm-cancel');
+                msgEl.textContent = message;
+                modal.classList.remove('hidden');
+                if (options.showCancel === false) {
+                    cancelBtn.classList.add('hidden');
+                } else {
+                    cancelBtn.classList.remove('hidden');
+                }
+                function cleanup(result) {
+                    modal.classList.add('hidden');
+                    okBtn.removeEventListener('click', okHandler);
+                    cancelBtn.removeEventListener('click', cancelHandler);
+                    resolve(result);
+                }
+                function okHandler() { cleanup(true); }
+                function cancelHandler() { cleanup(false); }
+                okBtn.addEventListener('click', okHandler);
+                cancelBtn.addEventListener('click', cancelHandler);
+            });
+        }
+        window.showModal = showModal;
+
+        // Initialize Feather icons
+        feather.replace();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Sync server theme setting with client-side theme manager
+            {% if current_user.is_authenticated %}
+            const serverTheme = '{{ theme or "system" }}';
+            if (window.themeManager && serverTheme) {
+                const storedTheme = localStorage.getItem(window.themeManager.storageKey);
+                if (serverTheme !== 'system' || !storedTheme) {
+                    themeManager.setTheme(serverTheme);
+                }
+            }
+            {% endif %}
+
+            // Ensure theme toggle icons reflect the active theme after icons are replaced
+            if (window.themeManager) {
+                themeManager.updateThemeToggleIcon(themeManager.getEffectiveTheme());
+            }
+
+            const csrfToken = "{{ csrf_token() }}";
+            function ensureCsrf(form) {
+                if (form.method && form.method.toLowerCase() === 'post' && !form.querySelector('input[name=\"csrf_token\"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrf_token';
+                    input.value = csrfToken;
+                    form.appendChild(input);
+                }
+            }
+
+            document.querySelectorAll('form').forEach(ensureCsrf);
+            document.addEventListener('submit', function(e) { ensureCsrf(e.target); }, true);
+
+            function setupDropdown(buttonId, menuId) {
+                const button = document.getElementById(buttonId);
+                const menu = document.getElementById(menuId);
+
+                if (button && menu) {
+                    button.addEventListener('click', function() {
+                        menu.classList.toggle('hidden');
+                        const isExpanded = !menu.classList.contains('hidden');
+                        button.setAttribute('aria-expanded', isExpanded.toString());
+                    });
+
+                    document.addEventListener('click', function(event) {
+                        if (!button.contains(event.target) && !menu.contains(event.target)) {
+                            menu.classList.add('hidden');
+                            button.setAttribute('aria-expanded', 'false');
+                        }
+                    });
+                }
+            }
+
+            setupDropdown('user-menu-button', 'user-menu');
+            setupDropdown('mobile-user-menu-button', 'mobile-user-menu');
+
+            const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileMenuToggle && mobileMenu) {
+                mobileMenuToggle.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                    const isExpanded = !mobileMenu.classList.contains('hidden');
+                    mobileMenuToggle.setAttribute('aria-expanded', isExpanded.toString());
+                    if (isExpanded) {
+                        const firstLink = mobileMenu.querySelector('a');
+                        if (firstLink) {
+                            firstLink.focus();
+                        }
+                    } else {
+                        mobileMenuToggle.focus();
+                    }
+                });
+            }
+
+            document.querySelectorAll('.export-link').forEach(function(link) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const modal = document.getElementById('export-modal');
+                    if (modal) {
+                        modal.classList.remove('hidden');
+                    }
+                });
+            });
+
+            const exportCancel = document.getElementById('export-cancel');
+            if (exportCancel) {
+                exportCancel.addEventListener('click', function() {
+                    document.getElementById('export-modal').classList.add('hidden');
+                });
+            }
+
+            const exportForm = document.getElementById('export-form');
+            if (exportForm) {
+                exportForm.addEventListener('submit', function() {
+                    document.getElementById('export-modal').classList.add('hidden');
+                });
+            }
+
+            document.querySelectorAll('form[data-confirm]').forEach(function(form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    showModal(form.dataset.confirm).then(function(ok) {
+                        if (ok) form.submit();
+                    });
+                });
+            });
+
+            document.querySelectorAll('button[data-confirm], a[data-confirm]').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showModal(el.dataset.confirm).then(function(ok) {
+                        if (!ok) return;
+                        if (el.tagName === 'A' && el.href) {
+                            window.location = el.href;
+                        } else if (el.tagName === 'BUTTON' && el.form) {
+                            if (el.hasAttribute('formaction')) el.form.action = el.formAction;
+                            if (el.hasAttribute('formmethod')) el.form.method = el.formMethod;
+                            if (el.name) {
+                                const hidden = document.createElement('input');
+                                hidden.type = 'hidden';
+                                hidden.name = el.name;
+                                hidden.value = el.value;
+                                el.form.appendChild(hidden);
+                            }
+                            el.form.submit();
+                        }
+                    });
+                });
+            });
+
+            // Auto-hide flash messages after 5 seconds
+            setTimeout(function() {
+                const flashMessages = document.querySelectorAll('.fixed.top-4.right-4 > div');
+                flashMessages.forEach(function(message) {
+                    message.style.opacity = '0';
+                    setTimeout(function() {
+                        message.remove();
+                    }, 300);
+                });
+            }, 5000);
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>
