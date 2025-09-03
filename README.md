@@ -67,17 +67,6 @@ Then visit: [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## 🤝 Contributing  
-
-Contributions are welcome!  
-
-1. Fork the repo  
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)  
-3. Commit changes (`git commit -m "Add amazing feature"`)  
-4. Push and open a Pull Request  
- 
-
----
 
 ## ⭐ Why Flip Track?  
 
