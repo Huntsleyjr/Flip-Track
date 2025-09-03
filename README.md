@@ -60,7 +60,10 @@ Then visit: [http://localhost:5000](http://localhost:5000)
 
 ## 📸 Screenshots  
 
-_Add screenshots here (Dashboard, Item Detail, Gallery, Dark Mode, Auction Watchlist)._  
+![Dashboard](screenshots/Dashboard-Light.png)
+![Dashboard](screenshots/Dashboard-Dark.png)
+![item-view](screenshots/Item-view.png)
+![item-create](screenshots/Item-create.png)
 
 ---
 
